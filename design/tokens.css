@@ -1,0 +1,369 @@
+/* =============================================================================
+   ZombieHunter AI — Design Tokens v2 ("STRATA")
+   Concept: Forensic / stratigraphic instrument. The bank's API estate is a
+   dig site; zombies are buried specimens. Every value below derives from that
+   concept — palette, grid, decay edges, instrument readouts, motion.
+
+   Dark only. Functional color. No gradients, no glows, no soft shadows.
+   Imported by frontend at src/styles/globals.css.
+
+   PALETTE NAMES MATTER. We use forensic vocabulary (tar, stratum, bone,
+   sediment, trench, blueprint) instead of generic SaaS names (canvas, panel,
+   border-subtle). The token names themselves carry the identity.
+   ============================================================================= */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────────
+     CANVAS — "tar", "stratum"
+     Warm-leaning near-black. Not pure neutral. The canvas reads as ground.
+     ───────────────────────────────────────────────────────────────────────── */
+  --tar:                #07090B;   /* app background — deepest stratum         */
+  --stratum:            #0D1013;   /* panel layer — a stratum above the tar    */
+  --stratum-raised:     #15191D;   /* hover / nested panel / modal             */
+  --stratum-trench:     #1A1F24;   /* used for in-panel sunken sections        */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     EDGES — "hairline", "trench", "fissure"
+     ───────────────────────────────────────────────────────────────────────── */
+  --hairline:           #1F2429;   /* default 1px border                       */
+  --hairline-strong:    #2A3036;   /* hover / focused borders                  */
+  --trench:             #3A4248;   /* the visible edge of an excavation — used
+                                      sparingly to frame a specimen header     */
+  --fissure:            #C24545;   /* the crack — bruise-red structural break  */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     GRID BACKDROP — the instrument's graph paper
+     A faint dotted grid is painted over the canvas via background-image.
+     Use only on --tar surfaces; never inside stratum panels.
+     ───────────────────────────────────────────────────────────────────────── */
+  --grid-dot:           rgba(232, 225, 208, 0.035);   /* bone @ 3.5% on tar   */
+  --grid-dot-strong:    rgba(232, 225, 208, 0.07);    /* axis dots (every 4)  */
+  --grid-size:          8px;        /* base dot spacing                        */
+  --grid-axis-every:    4;          /* every Nth dot is the stronger one       */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     TEXT — "bone", "bone-dim", "sediment"
+     The signature move. Warm cream, not cold white.
+     ───────────────────────────────────────────────────────────────────────── */
+  --bone:               #E8E1D0;   /* primary text. 14.8:1 on tar — AAA        */
+  --bone-dim:           #9A938A;   /* secondary text.  6.9:1 on tar — AAA      */
+  --sediment:           #5A554F;   /* tertiary / labels. 3.0:1 — NON-TEXT ONLY
+                                      (dividers, micro-labels ≥14px, decoration) */
+  --sediment-strong:    #75706A;   /* tertiary text-safe. 4.6:1 on tar — AA   */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     CLASSIFICATION — the three states of a specimen.
+     Dropped: SOC green/amber/red. Replaced with forensic-museum palette:
+       active     = clinical cyan-white  (a fresh tag on a live specimen)
+       deprecated = sepia oxidation      (paper turning brown with age)
+       orphaned   = old-bone yellow      (the color of forgotten parchment)
+       critical   = oxidized bruise-red  (a fault line in the strata)
+     ───────────────────────────────────────────────────────────────────────── */
+  --active:             #A8DDDD;   /* 11.8:1 on tar — AAA                      */
+  --deprecated:         #B8854A;   /*  5.8:1 on tar — AAA                      */
+  --orphaned:           #C8B068;   /*  8.5:1 on tar — AAA                      */
+  --critical:           #C24545;   /*  5.1:1 on tar — AAA (this is fissure)    */
+
+  /* Badge backgrounds — same hue, ~10% opacity over the stratum panel.
+     Lower than the SOC convention (14%) because our palette is more chromatic
+     and would otherwise feel decorative. */
+  --active-wash:        rgba(168, 221, 221, 0.10);
+  --deprecated-wash:    rgba(184, 133,  74, 0.10);
+  --orphaned-wash:      rgba(200, 176, 104, 0.10);
+  --critical-wash:      rgba(194,  69,  69, 0.12);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     RISK TIERS — re-use the classification palette, plus one
+     "medium" tone (warm rust) distinct from deprecated/orphaned.
+     ───────────────────────────────────────────────────────────────────────── */
+  --tier-critical:      var(--critical);
+  --tier-high:          var(--deprecated);
+  --tier-medium:        #9F8C5A;   /* duller bone-yellow                       */
+  --tier-low:           var(--active);
+
+  --tier-critical-wash: var(--critical-wash);
+  --tier-high-wash:     var(--deprecated-wash);
+  --tier-medium-wash:   rgba(159, 140,  90, 0.10);
+  --tier-low-wash:      var(--active-wash);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     ACCENT — "blueprint"
+     The blue of engineering blueprints and cyanotype prints. Used for
+     interactive affordances, selected state, focus rings, and the scan-progress
+     depth bar. Never green. Never neon.
+     ───────────────────────────────────────────────────────────────────────── */
+  --blueprint:          #7AA0D8;   /* 7.6:1 on tar — AAA. Interactive accent.  */
+  --blueprint-deep:     #3D5C8C;   /* same hue, surface use only (chart fills) */
+  --blueprint-wash:     rgba(122, 160, 216, 0.12);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     SEVERITY (scan feed)
+     ───────────────────────────────────────────────────────────────────────── */
+  --severity-info:      var(--bone-dim);
+  --severity-warning:   var(--deprecated);
+  --severity-critical:  var(--critical);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     HTTP METHOD COLORS
+     We deliberately desaturate these. A method pill is metadata, not status.
+     ───────────────────────────────────────────────────────────────────────── */
+  --method-get:         var(--blueprint);
+  --method-post:        var(--active);
+  --method-put:         var(--deprecated);
+  --method-delete:      var(--critical);
+  --method-patch:       var(--bone-dim);
+
+  --method-get-wash:    var(--blueprint-wash);
+  --method-post-wash:   var(--active-wash);
+  --method-put-wash:    var(--deprecated-wash);
+  --method-delete-wash: var(--critical-wash);
+  --method-patch-wash:  rgba(154, 147, 138, 0.10);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     DECAY EFFECT TOKENS
+     Decay is not just a color — it is a *structural* property of the panel.
+     These tokens drive the orphaned/critical visual treatment.
+     ───────────────────────────────────────────────────────────────────────── */
+  --decay-edge-deprecated: var(--deprecated);   /* dashed border color         */
+  --decay-edge-orphaned:   var(--orphaned);     /* stippled/broken border      */
+  --decay-edge-critical:   var(--critical);     /* fissure border              */
+
+  /* Dash patterns — used as border-style: dashed combined with these widths */
+  --decay-dash-pattern:    8px 6px;             /* CSS: 8px dash, 6px gap       */
+  --decay-stipple-pattern: 2px 4px;             /* shorter, more "broken"       */
+
+  /* Scanline overlay — used as a repeating-linear-gradient on critical panels.
+     Render as: background-image: var(--scanline-overlay); */
+  --scanline-overlay:
+    repeating-linear-gradient(
+      0deg,
+      rgba(232, 225, 208, 0.025) 0px,
+      rgba(232, 225, 208, 0.025) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+
+  /* Stipple / noise overlay — used on orphaned panels as a soft "dust" texture.
+     Render as: background-image: var(--stipple-overlay); */
+  --stipple-overlay:
+    radial-gradient(circle at 1px 1px, rgba(232, 225, 208, 0.04) 1px, transparent 0);
+  --stipple-size:       3px 3px;
+
+  /* Tilt — critical orphaned panels rotate 1° off the perpendicular grid.
+     They are literally falling off the page. */
+  --decay-tilt:         -0.6deg;     /* applied with transform: rotate(...) */
+  --decay-tilt-strong:  -1.2deg;     /* reserved for the single highest-risk
+                                        specimen card on the dashboard          */
+
+  /* Text-displacement glitch — used on hover of orphaned specimen IDs.
+     Applied as a subtle text-shadow that simulates registration error. */
+  --decay-glitch-shadow:
+    1px 0 0 rgba(122, 160, 216, 0.35),
+    -1px 0 0 rgba(194, 69, 69, 0.35);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     TYPOGRAPHY
+     IBM Plex Mono is the voice of the product. Plex Sans is reserved for
+     ONE use: the threat-narrative paragraph in the endpoint drawer, where
+     long prose at body size in mono becomes fatiguing. Everything else mono.
+     ───────────────────────────────────────────────────────────────────────── */
+  --font-mono:          "IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", monospace;
+  --font-sans:          "IBM Plex Sans", "Inter", system-ui, "Segoe UI", sans-serif;
+
+  --fw-regular:         400;
+  --fw-medium:          500;   /* used for emphasis in mono                    */
+  --fw-semibold:        600;
+  --fw-bold:            700;   /* counter strip only                           */
+
+  /* Type scale — slightly larger than typical SOC because mono runs visually
+     smaller than sans at the same px size. */
+  --fs-counter:         72px;  --lh-counter:       1;        /* discovery counter */
+  --fs-page-title:      19px;  --lh-page-title:    1.25;
+  --fs-section-title:   14px;  --lh-section-title: 1.4;
+  --fs-body:            13px;  --lh-body:          1.55;
+  --fs-narrative:       14px;  --lh-narrative:     1.65;     /* Plex Sans only   */
+  --fs-label:           11px;  --lh-label:         1.35;
+  --fs-micro:           10px;  --lh-micro:         1.3;
+  --fs-readout:         12px;  --lh-readout:       1.4;      /* instrument readouts */
+  --fs-specimen-id:     11px;  --lh-specimen-id:   1;        /* zh-NNNN tags     */
+  --fs-depth-marker:    10px;  --lh-depth-marker:  1;        /* graph Y-axis     */
+
+  /* Letter-spacing — mono needs none, but tiny labels get +0.04em for legibility */
+  --ls-tight:           -0.01em;
+  --ls-normal:          0;
+  --ls-wide:            0.04em;
+  --ls-readout:         0.02em;    /* the cadence of an instrument display     */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     SPACING — 4px base. Used unchanged from before. Brutalist composition
+     uses spacing sparingly; many panels share borders with no gap.
+     ───────────────────────────────────────────────────────────────────────── */
+  --space-0:   0px;     /* explicit zero — used between bordered panels        */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     RADII
+     SHARP. The instrument has corners, not rounded edges. Radii are reserved
+     for soft inline elements (badges, pills). Cards and panels are square.
+     ───────────────────────────────────────────────────────────────────────── */
+  --radius-none:  0px;        /* default for panels, cards, modals             */
+  --radius-xs:    2px;        /* inputs, buttons, badges, pills                */
+  --radius-sm:    3px;        /* score meter inner                              */
+  /* Note: --radius-md and --radius-lg from the old system are DELETED.        */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     BORDERS
+     1px hairline by default. The instrument is drawn in thin lines.
+     ───────────────────────────────────────────────────────────────────────── */
+  --border-width:        1px;
+  --border-width-thick:  2px;     /* selected row / focused specimen           */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     FOCUS RING
+     Sharp, not soft. A 2px blueprint outline, no glow.
+     ───────────────────────────────────────────────────────────────────────── */
+  --focus-ring:          0 0 0 2px var(--blueprint);
+  --focus-ring-offset:   0 0 0 1px var(--tar), 0 0 0 3px var(--blueprint);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     MOTION
+     Two voices: instrument cadence (mechanical, even, slightly slow) for
+     readouts; decay (drift, irregular) for orphaned states.
+     ───────────────────────────────────────────────────────────────────────── */
+  --ease-instrument:     cubic-bezier(0.22, 1, 0.36, 1);   /* crisp settle     */
+  --ease-mechanical:     cubic-bezier(0.4, 0, 0.6, 1);     /* even, linear-ish */
+  --ease-decay:          cubic-bezier(0.65, 0, 0.35, 1);   /* heavy fall-off   */
+
+  --dur-fast:            120ms;
+  --dur-base:            200ms;
+  --dur-slow:            320ms;
+  --dur-drawer:          260ms;   /* slide-in from right                       */
+  --dur-counter:         2200ms;  /* depth scan climb                          */
+  --dur-typewriter:      22ms;    /* per-character cadence for field notes     */
+  --dur-teletype-jitter: 6ms;     /* ±jitter on typewriter (gives weight)      */
+  --dur-wave:            1600ms;  /* fault-line propagation                    */
+  --dur-stratum-settle:  900ms;   /* graph nodes settling into strata          */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     Z-LAYERS
+     ───────────────────────────────────────────────────────────────────────── */
+  --z-grid:     0;
+  --z-base:     1;
+  --z-nav:      10;
+  --z-topbar:   20;
+  --z-drawer:   40;
+  --z-overlay:  50;
+  --z-toast:    60;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYOUT CONSTANTS
+     ───────────────────────────────────────────────────────────────────────── */
+  --nav-rail-width:        64px;
+  --top-bar-height:        56px;
+  --drawer-width:          520px;     /* wider than before — specimen layout   */
+  --depth-meter-height:    48px;      /* discovery counter strip               */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Utility classes — only those frontend cannot easily reach via Tailwind.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* The grid backdrop. Apply to the <main> element or any --tar surface. */
+.bg-grid {
+  background-color: var(--tar);
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 0);
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+/* Heavier grid — every 4th dot, for the API Landscape strata view. */
+.bg-grid-strata {
+  background-color: var(--tar);
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--grid-dot-strong) 1px, transparent 0),
+    radial-gradient(circle at 1px 1px, var(--grid-dot)        1px, transparent 0);
+  background-size: 32px 32px, 8px 8px;
+}
+
+/* Scanline overlay — applied as a layer over a critical specimen panel. */
+.overlay-scanline {
+  position: relative;
+}
+.overlay-scanline::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: var(--scanline-overlay);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Stipple overlay — applied to orphaned specimen panels. */
+.overlay-stipple {
+  position: relative;
+}
+.overlay-stipple::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: var(--stipple-overlay);
+  background-size: var(--stipple-size);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+/* Decayed border — orphaned specimens have a stippled (short-dashed) border. */
+.border-decay-orphaned {
+  border-style: dashed;
+  border-width: 1px;
+  border-color: var(--decay-edge-orphaned);
+  /* CSS dashed pattern is browser-defined; for control, use SVG border in
+     the component. Token --decay-stipple-pattern is the canonical pattern. */
+}
+.border-decay-deprecated {
+  border-style: dashed;
+  border-width: 1px;
+  border-color: var(--decay-edge-deprecated);
+}
+.border-decay-critical {
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--decay-edge-critical);
+}
+
+/* Tilt — applied to critical specimens to break perpendicular grid. */
+.decay-tilt          { transform: rotate(var(--decay-tilt)); }
+.decay-tilt-strong   { transform: rotate(var(--decay-tilt-strong)); }
+
+/* Glitch shadow — on hover of orphaned specimen IDs. */
+.glitch-on-hover:hover {
+  text-shadow: var(--decay-glitch-shadow);
+}
+
+/* Tabular nums utility for instrument readouts. */
+.mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-readout);
+}
+
+/* Specimen ID — small, dim, monospace, tracked. The product's signature tag. */
+.specimen-id {
+  font-family: var(--font-mono);
+  font-size: var(--fs-specimen-id);
+  line-height: var(--lh-specimen-id);
+  color: var(--sediment-strong);
+  letter-spacing: var(--ls-wide);
+  text-transform: lowercase;
+}
+
+/* Box-drawing frame helpers. Pure text — set in mono. See identity.md. */
+.frame-char { font-family: var(--font-mono); color: var(--sediment); user-select: none; }
