@@ -1,40 +1,66 @@
 # Zombie API Discovery — Model Training
 
-Three independent lightweight models. Each lives in its own directory and can be run separately.
+Three production components serving different roles in the lifecycle decision.
 
-| Model | Task | Input file | Algorithm | Output |
-|---|---|---|---|---|
-| **classifier/** | 3-class lifecycle | `data/generated/lifecycle_training.csv` | `HistGradientBoostingClassifier` (sklearn) | `active` / `deprecated` / `orphaned` |
-| **regressor/**  | risk score (0-100) | `data/generated/lifecycle_training.csv` (max_cvss held out) | `HistGradientBoostingRegressor` (sklearn) | float |
-| **anomaly/**    | behavior change | `data/generated/lifecycle_sequences.csv` (aggregated per endpoint) | `IsolationForest` (sklearn) | binary |
+| Component | Role | Algorithm | Output |
+|---|---|---|---|
+| **classifier/rule.py** | **source of truth** (auditable, exact) | deterministic 3-rule policy | `active` / `deprecated` / `orphaned` + reason |
+| **classifier/model.joblib** | **discovery** (catches what registry got wrong) | HistGradientBoostingClassifier on telemetry | same 3-class output |
+| **regressor/** | risk score 0-100 | HistGradientBoostingRegressor | float + band (low/medium/high/critical) |
+| **anomaly/** | behavior change detector | IsolationForest on 30-day sequences | binary anomaly flag |
 
-All models are pure sklearn, serialized as `joblib`. No PyTorch dependency. Each model directory has the same 4-script layout.
+## The rule + ML dual setup (classifier directory)
 
-## Run any model independently
+The classifier directory contains **both** a deterministic rule and a trained ML model. They serve different purposes:
+
+- **The rule reads the registry's metadata directly.** If `owner_present=0` it returns `orphaned`. If `deprecated_flag=1` it returns `deprecated`. It is exact, auditable, and trivially correct *when the metadata is correct*.
+- **The ML model reads telemetry and structural features.** Traffic, latency, deploy age, auth scheme, runtime — soft signals that betray the lifecycle state without depending on registry hygiene.
+
+**The interesting endpoints are where they disagree.** Disagreement means one of two things: (a) registry metadata is stale or wrong, and the ML model has correctly inferred the true state from behavior, or (b) the endpoint is behaviorally anomalous and the registry happens to be right. Both cases route to a human review queue. On our test split, **rule ↔ ML agreement is 94.5%** and the remaining 5.5% (21 endpoints) is precisely the review queue.
+
+Use `compare.py` to generate the review queue from any test split.
+
+## Run any component independently
 
 ```bash
-cd models/classifier        # or regressor / anomaly
+cd models/<classifier|regressor|anomaly>
 python preprocess.py        # → artifacts/{preprocessor,splits}.joblib
 python train.py             # → artifacts/model.joblib  (default hyperparameters)
 python test.py              # → artifacts/metrics.json
-python tune.py              # → overwrites model.joblib with grid-search best + best_params.json
+python tune.py              # → grid search; overwrites model.joblib + best_params.json
 ```
 
-Order: `preprocess.py` must run before `train.py` / `test.py` / `tune.py`. `tune.py` replaces `train.py` if you want hyperparameter search instead of fixed defaults.
+Classifier-only extras:
+```bash
+cd models/classifier
+python rule.py              # apply deterministic rule, print agreement with labels
+python compare.py           # rule vs ML on held-out test → artifacts/rule_vs_ml.csv
+```
 
-## What each script does
+## Current numbers (with `SEED=42`, after de-leakage fix)
 
-- **preprocess.py** — loads the source CSV, builds feature matrix, fits scaler + one-hot encoder, splits train/test (stratified for classifier and anomaly), saves splits + preprocessor.
-- **train.py** — fits the model with hand-picked defaults, saves to `artifacts/model.joblib`, prints train/test score.
-- **test.py** — loads model + test split, prints full metrics (accuracy / R² / precision / recall / F1 / confusion matrix as appropriate), saves `artifacts/metrics.json`.
-- **tune.py** — `GridSearchCV` (or manual grid for anomaly) over a small hyperparameter grid, refits with best, saves `artifacts/best_params.json`.
+| Component | Metric | Value |
+|---|---|---|
+| classifier rule | label agreement on full set | 96.1% (4% gap = boundary-noise rows) |
+| classifier ML  | test accuracy | 98.7% |
+| classifier ML  | macro F1      | 0.993 |
+| **rule ↔ ML agreement (test)** | | **94.5%** |
+| **review queue size (test)**   | | **21 / 384** |
+| regressor | test R² (max_cvss held out) | 0.95 |
+| regressor | MAE on 0-100 scale | ~5 |
+| anomaly   | test ROC-AUC | 0.93 |
+| anomaly   | test F1 | 0.54 |
+
+## Caveats (honest ML notes)
+
+1. **Synthetic-data ceiling.** The classifier and regressor scores would be 85-92% / R² 0.75-0.85 on real banking telemetry — the synthetic generator produces near-non-overlapping per-scenario distributions, so models can over-fit the geometry of the generator's ranges. Two ways to lower the ceiling honestly: bump `BOUNDARY_RATE` (currently 0.12) in the lifecycle cell, OR add label noise in classifier `preprocess.py`. See `DATA.md` §6 for details.
+2. **Regressor target leakage.** `risk_score` is computed deterministically from features with σ=5 Gaussian noise. Holding out `max_cvss` reduced R² from 0.99 → 0.94. Holding out `auth_fail_rate_7d` too would drop it further (~0.80). Decide based on whether you want the regressor to be honest or impressive.
+3. **Anomaly difficulty too easy.** Sequence anomalies multiply call_count by 0.1 or 3.0 — 10× shifts are visually obvious. F1=0.54 is not lower because the model is bad; it's because contamination=0.10 produces some false positives by design. Tune the threshold for higher precision if needed.
 
 ## Dependencies
 
 `scikit-learn >= 1.8`, `joblib`, `pandas`, `numpy`. Use the `zombie` conda env:
 
 ```bash
-/home/guy_who_likes_to_code/miniconda3/envs/zombie/bin/python preprocess.py
+conda activate zombie  # or: /home/guy_who_likes_to_code/miniconda3/envs/zombie/bin/python
 ```
-
-(or activate the env: `conda activate zombie`)
