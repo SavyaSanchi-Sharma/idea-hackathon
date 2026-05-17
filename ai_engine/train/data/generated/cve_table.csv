@@ -1,0 +1,14 @@
+runtime,version,cve_id,cvss,summary
+springboot,2.5.0,CVE-2022-22965,9.8,Spring4Shell RCE via data binding
+springboot,2.7.18,CVE-2023-20860,7.5,Security bypass via pattern matching
+springboot,3.2.0,CVE-2024-22243,6.1,URL parsing open redirect
+nodejs,14.21,CVE-2023-30581,8.8,Permission model bypass via Module
+nodejs,18.19,CVE-2024-22019,7.5,HTTP request smuggling chunked encoding
+nodejs,20.11,CVE-2024-21892,7.8,Privilege escalation via env vars
+python,3.7,CVE-2023-24329,7.5,urllib.parse scheme bypass
+python,3.9,CVE-2023-40217,5.3,TLS handshake data leak
+python,3.11,CVE-2024-0397,5.9,ssl module memory race
+golang,1.19,CVE-2023-29406,6.5,HTTP host header validation bypass
+golang,1.21,CVE-2024-24784,6.5,net/mail comment parsing
+dotnet,6.0,CVE-2024-21386,7.5,SignalR denial of service
+dotnet,8.0,CVE-2024-30045,6.8,Remote code execution via deserialization
