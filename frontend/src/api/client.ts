@@ -1,5 +1,4 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-const USE_FIXTURE = import.meta.env.VITE_USE_FIXTURE === "true";
 
 export class ApiError extends Error {
   status: number;
@@ -55,24 +54,4 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
 
 export const apiConfig = {
   baseUrl: BASE_URL,
-  useFixture: USE_FIXTURE,
 };
-
-// Run `real()` against the backend; on any failure (including USE_FIXTURE=true)
-// fall back to `fallback()`. Keeps the rest of the app agnostic.
-export async function withFixtureFallback<T>(
-  real: () => Promise<T>,
-  fallback: () => T | Promise<T>,
-): Promise<T> {
-  if (USE_FIXTURE) {
-    return await fallback();
-  }
-  try {
-    return await real();
-  } catch (err) {
-    if (import.meta.env.DEV) {
-      console.warn("[api] backend unreachable, using fixture", err);
-    }
-    return await fallback();
-  }
-}

@@ -6,10 +6,13 @@ import { useUiStore } from "@/store/uiStore";
 import { useEndpointDetail } from "@/hooks/useEndpointDetail";
 import { Badge } from "@/components/common/Badge";
 import { MethodPill } from "@/components/common/MethodPill";
+import { SignalBadge, type SignalKind } from "@/components/common/SignalBadge";
 import { SpecimenId } from "@/components/common/SpecimenId";
 import { PostureBlock } from "./PostureBlock";
 import { ThreatNarrative } from "./ThreatNarrative";
 import { SignalsGrid } from "./SignalsGrid";
+import { SequenceChart } from "./SequenceChart";
+import { ModelVerdict } from "./ModelVerdict";
 import { postEndpointAction } from "@/api/endpoints";
 import { cn } from "@/lib/cn";
 
@@ -19,6 +22,15 @@ const ACTION_LABEL: Record<RecommendedAction, string> = {
   block: "block now",
   playbook: "generate playbook",
 };
+
+function drawerSignals(ep: Endpoint): SignalKind[] {
+  const out: SignalKind[] = [];
+  if (ep.is_zombie) out.push("zombie");
+  if (ep.is_shadow) out.push("shadow");
+  if (ep.anomaly_flag) out.push("anomaly");
+  if (ep.needs_review) out.push("review");
+  return out;
+}
 
 export function EndpointDrawer() {
   const drawerOpen = useUiStore((s) => s.drawerOpen);
@@ -161,8 +173,8 @@ function DrawerBody({
   async function onPrimaryAction() {
     try {
       await postEndpointAction(endpoint.id, action);
-    } catch {
-      /* fixture path is always ok */
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn("[action] post failed", err);
     }
   }
 
@@ -190,10 +202,13 @@ function DrawerBody({
 
         <div className="relative flex items-start justify-between gap-[12px]">
           <div className="flex flex-col gap-[12px] min-w-0 flex-1">
-            <div className="flex items-center gap-[12px]">
+            <div className="flex flex-wrap items-center gap-[8px]">
               <SpecimenId id={endpoint.specimen_id} />
               <Badge variant="classification" value={endpoint.classification} />
               <Badge variant="tier" value={endpoint.risk_tier} />
+              {drawerSignals(endpoint).map((k) => (
+                <SignalBadge key={k} kind={k} />
+              ))}
             </div>
             <div className="flex items-center gap-[12px] min-w-0">
               <MethodPill method={endpoint.method} />
@@ -221,6 +236,9 @@ function DrawerBody({
 
       {/* POSTURE */}
       <PostureBlock endpoint={endpoint} />
+
+      {/* MODEL VERDICT — rule vs ml side-by-side */}
+      <ModelVerdict endpoint={endpoint} />
 
       {/* CLASSIFICATION REASONING */}
       <section className="px-[24px] py-[16px] border-b border-hairline">
@@ -268,6 +286,13 @@ function DrawerBody({
 
       {/* SIGNALS */}
       <SignalsGrid endpoint={endpoint} />
+
+      {/* 30-DAY TELEMETRY — the actual input to the anomaly model */}
+      <SequenceChart
+        endpointId={endpoint.id}
+        anomalyFlag={endpoint.anomaly_flag}
+        anomalyScore={endpoint.anomaly_score}
+      />
 
       {/* RECOMMENDED ACTION */}
       <section className="px-[24px] py-[16px]">

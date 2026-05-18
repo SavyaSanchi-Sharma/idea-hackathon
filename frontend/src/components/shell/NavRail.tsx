@@ -11,6 +11,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/", glyph: "▼", label: "command center", subtitle: "depth scan" },
   { to: "/inventory", glyph: "◇", label: "inventory", subtitle: "specimen catalog" },
+  { to: "/review", glyph: "⊘", label: "review queue", subtitle: "rule ≠ ml disagreement" },
   { to: "/landscape", glyph: "▣", label: "landscape", subtitle: "stratigraphic cross-section" },
   { to: "/reports", glyph: "▷", label: "reports", subtitle: "compliance · phase 3" },
 ];

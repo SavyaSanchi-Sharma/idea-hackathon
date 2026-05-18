@@ -56,6 +56,19 @@ export type ServiceLane =
   | "internal"
   | "legacy";
 
+export interface RawSignals {
+  auth_fail_rate_7d: number;
+  p95_latency_ms: number;
+  call_count_7d: number;
+  schema_count: number;
+  runtime: string;
+  runtime_version: string;
+  cve_id: string | null;
+  max_cvss: number;
+  last_seen_days: number;
+  last_deploy_days: number;
+}
+
 export interface Endpoint {
   id: string;
   /** STRATA specimen id, lowercased zh-NNNN. */
@@ -87,6 +100,62 @@ export interface Endpoint {
   threat_narrative: string;
   recommended_action: RecommendedAction;
   blast_radius_nodes: string[];
+  /** Deterministic rule verdict — registry's view (auditable, exact). */
+  rule_state?: Classification;
+  /** ML classifier verdict — telemetry's view (may diverge from rule_state). */
+  ml_state?: Classification;
+  /** Softmax of the winning ml_state class, 0..1. */
+  ml_confidence?: number;
+  /** True when rule_state ≠ ml_state — this is the "discovery" signal. */
+  needs_review?: boolean;
+  /** Sub-classifications under "orphaned" — zombie = high-traffic, shadow = not-in-registry. */
+  is_zombie?: boolean;
+  is_shadow?: boolean;
+  /** IsolationForest output on the 30-day sequence. */
+  anomaly_flag?: boolean;
+  anomaly_score?: number | null;
+  /** Number of OWASP API categories triggered for this row. */
+  finding_count?: number;
+  /** Raw per-row telemetry that drives the regressor and rule. */
+  signals?: RawSignals;
+}
+
+export interface ModelMetrics {
+  classifier?: {
+    accuracy: number;
+    macro_f1: number;
+    confusion_matrix: number[][];
+    per_class: Record<string, Record<string, number>>;
+  };
+  regressor?: {
+    r2: number;
+    mae: number;
+    rmse: number;
+    residual_mean: number;
+    residual_std: number;
+    band_mae: Record<string, number>;
+  };
+  anomaly?: {
+    precision: number;
+    recall: number;
+    f1: number;
+    roc_auc: number;
+    confusion_matrix: number[][];
+  };
+}
+
+export interface SequencePoint {
+  day: number;
+  call_count: number;
+  auth_fail_rate: number;
+  p95_latency_ms: number;
+}
+
+export interface EndpointSequence {
+  endpoint_id: string;
+  anomaly_flag: boolean;
+  anomaly_score: number | null;
+  points: SequencePoint[];
 }
 
 export type GraphNodeType =

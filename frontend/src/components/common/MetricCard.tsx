@@ -128,11 +128,11 @@ export function MetricCard({
             {delta !== 0 ? (
               <>
                 <span className={cn("font-mono text-[11px] leading-none font-medium mono-tab", tone.text)}>
-                  {tone.deltaSign} {delta > 0 ? "+" : ""}
+                  {delta > 0 ? "▲" : "▼"} {delta > 0 ? "+" : ""}
                   {delta}
                 </span>
                 <span className="font-mono text-[11px] leading-none text-sediment-strong">
-                  from registry baseline
+                  vs registry baseline
                 </span>
               </>
             ) : (

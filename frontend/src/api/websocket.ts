@@ -1,5 +1,4 @@
 import type { Endpoint, ScanEvent, ScanJob, ScanStats } from "@/types/models";
-import { buildScanSimulation } from "./fixtures";
 
 export type WsMessage =
   | { type: "scan_progress"; payload: { scan_id: string; progress: number; stats: ScanStats } }
@@ -7,7 +6,7 @@ export type WsMessage =
   | { type: "endpoint_update"; payload: Endpoint }
   | { type: "scan_complete"; payload: ScanJob };
 
-export type WsStatus = "connecting" | "open" | "closed" | "fixture";
+export type WsStatus = "connecting" | "open" | "closed";
 
 export interface WsClient {
   status(): WsStatus;
@@ -15,13 +14,10 @@ export interface WsClient {
   onStatus(handler: (status: WsStatus) => void): () => void;
   connect(): void;
   close(): void;
-  // Pumps the canned scan simulation through the same onMessage handlers
-  // so the UI behavior is identical to a real WS stream.
-  emitSimulatedScan(scanId: string): void;
+  send(msg: Record<string, unknown>): void;
 }
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8000/ws";
-const USE_FIXTURE = import.meta.env.VITE_USE_FIXTURE === "true";
 const BACKOFF_BASE_MS = 800;
 const BACKOFF_MAX_MS = 8_000;
 
@@ -38,10 +34,11 @@ function isWsMessage(value: unknown): value is WsMessage {
 
 export function createWsClient(): WsClient {
   let socket: WebSocket | null = null;
-  let status: WsStatus = USE_FIXTURE ? "fixture" : "closed";
+  let status: WsStatus = "closed";
   let attempt = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let closedByCaller = false;
+  const pendingSends: string[] = [];
 
   const messageHandlers = new Set<(msg: WsMessage) => void>();
   const statusHandlers = new Set<(status: WsStatus) => void>();
@@ -63,6 +60,13 @@ export function createWsClient(): WsClient {
     reconnectTimer = setTimeout(open, delay);
   }
 
+  function flushPending() {
+    while (pendingSends.length > 0 && socket?.readyState === WebSocket.OPEN) {
+      const payload = pendingSends.shift();
+      if (payload) socket.send(payload);
+    }
+  }
+
   function open() {
     if (closedByCaller) return;
     setStatus("connecting");
@@ -78,6 +82,7 @@ export function createWsClient(): WsClient {
     socket.onopen = () => {
       attempt = 0;
       setStatus("open");
+      flushPending();
     };
 
     socket.onmessage = (event) => {
@@ -101,10 +106,6 @@ export function createWsClient(): WsClient {
   }
 
   function connect() {
-    if (USE_FIXTURE) {
-      setStatus("fixture");
-      return;
-    }
     closedByCaller = false;
     open();
   }
@@ -120,12 +121,13 @@ export function createWsClient(): WsClient {
     setStatus("closed");
   }
 
-  function emitSimulatedScan(scanId: string) {
-    const sequence = buildScanSimulation(scanId);
-    const interval = 320; // ms between frames — ~10s total
-    sequence.forEach((msg, idx) => {
-      setTimeout(() => emit(msg), idx * interval);
-    });
+  function send(msg: Record<string, unknown>) {
+    const payload = JSON.stringify(msg);
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(payload);
+    } else {
+      pendingSends.push(payload);
+    }
   }
 
   return {
@@ -141,7 +143,7 @@ export function createWsClient(): WsClient {
     },
     connect,
     close,
-    emitSimulatedScan,
+    send,
   };
 }
 

@@ -71,13 +71,14 @@ export function DepthMeter() {
   const { data: summary } = useSummary();
   const { isStarting, runScan } = useScan();
 
-  const baseline = summary?.registry_baseline ?? 247;
+  const baseline = summary?.registry_baseline ?? 0;
   const liveDiscovered =
-    liveStats?.total_discovered ?? (scanStatus === "complete" ? summary?.total_discovered ?? baseline : baseline);
-  const liveOrphaned = liveStats?.orphaned ?? (scanStatus === "complete" ? summary?.orphaned ?? 0 : 0);
+    liveStats?.total_discovered ?? summary?.total_discovered ?? baseline;
+  const liveOrphaned = liveStats?.orphaned ?? summary?.orphaned ?? 0;
 
-  // Stratum zombie counts are inferred — front-end is fixture-only here. The
-  // back-end could emit per-stratum stats explicitly.
+  // Stratum zombie counts are an inferred distribution over the orphaned
+  // total — the backend doesn't yet emit per-stratum stats, so we apportion
+  // them across the four time bands using a fixed shape.
   const stratumZombies: Record<Stratum["zombieCountKey"], number> = {
     stratum1: 0,
     stratum2: Math.round(liveOrphaned * 0.2),

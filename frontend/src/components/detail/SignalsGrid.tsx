@@ -36,9 +36,38 @@ export function SignalsGrid({ endpoint }: SignalsGridProps) {
       </h3>
       <div className="grid grid-cols-2 gap-x-[24px] gap-y-[8px]">
         <KV label="auth type" value={auth.type} />
-        <KV label="rate limited" value={auth.rate_limited ? "yes" : "no"} />
+        <KV
+          label="auth fail rate"
+          value={
+            endpoint.signals
+              ? `${(endpoint.signals.auth_fail_rate_7d * 100).toFixed(2)}% / 7d`
+              : auth.rate_limited ? "rate-limited" : "—"
+          }
+        />
+        <KV
+          label="p95 latency"
+          value={endpoint.signals ? `${endpoint.signals.p95_latency_ms} ms` : "—"}
+        />
         <KV label="mfa" value={auth.mfa ? "yes" : "no"} />
+        <KV
+          label="runtime"
+          value={
+            endpoint.signals
+              ? `${endpoint.signals.runtime} ${endpoint.signals.runtime_version}`
+              : "—"
+          }
+        />
+        <KV
+          label="schema count"
+          value={endpoint.signals ? `${endpoint.signals.schema_count}` : "—"}
+        />
         <KV label="data classes" value={data_classes.length > 0 ? data_classes.join(", ") : "—"} />
+        <KV
+          label="finding count"
+          value={
+            typeof endpoint.finding_count === "number" ? `${endpoint.finding_count}` : "—"
+          }
+        />
         <KV label="last commit" value={last_commit ? `${last_commit.slice(0, 10)} · ${formatRelativeTime(last_commit)}` : "—"} />
         <KV label="last deploy" value={last_deploy ? `${last_deploy.slice(0, 10)} · ${formatRelativeTime(last_deploy)}` : "—"} />
         <KV

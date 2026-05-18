@@ -1,13 +1,23 @@
 import { FilterChip } from "@/components/common/FilterChip";
-import { useUiStore } from "@/store/uiStore";
+import { useUiStore, type SignalFlag } from "@/store/uiStore";
 import { useEndpoints } from "@/hooks/useEndpoints";
-import type { Classification, DiscoverySource, RiskTier } from "@/types/models";
+import type { Classification, DiscoverySource, Endpoint, RiskTier } from "@/types/models";
 
 type SortOption =
   | "posture_score:desc"
   | "posture_score:asc"
   | "last_seen:desc"
-  | "last_seen:asc";
+  | "last_seen:asc"
+  | "ml_confidence:asc"
+  | "ml_confidence:desc";
+
+const SIGNALS: Array<{ value: SignalFlag; label: string; glyph: string; tone: "neutral" | "critical" | "deprecated" | "active" | "blueprint" }> = [
+  { value: "all", label: "all", glyph: "·", tone: "neutral" },
+  { value: "needs_review", label: "review", glyph: "⊘", tone: "blueprint" },
+  { value: "is_zombie", label: "zombie", glyph: "✖", tone: "critical" },
+  { value: "is_shadow", label: "shadow", glyph: "◌", tone: "deprecated" },
+  { value: "anomaly", label: "anomaly", glyph: "∿", tone: "deprecated" },
+];
 
 interface FilterBarProps {
   sort: SortOption;
@@ -99,6 +109,21 @@ export function FilterBar({ sort, onSortChange }: FilterBarProps) {
         ))}
       </FilterRow>
 
+      <FilterRow label="signal">
+        {SIGNALS.map((s) => (
+          <FilterChip
+            key={s.value}
+            tone={s.tone}
+            selected={filters.signal === s.value}
+            count={s.value === "all" ? total : countSignal(all?.items ?? [], s.value)}
+            onClick={() => setFilters({ signal: s.value })}
+          >
+            <span className="mr-[2px]" aria-hidden>{s.glyph}</span>
+            {s.label}
+          </FilterChip>
+        ))}
+      </FilterRow>
+
       <FilterRow label="sort">
         <FilterChip
           tone="blueprint"
@@ -113,6 +138,13 @@ export function FilterBar({ sort, onSortChange }: FilterBarProps) {
           onClick={() => onSortChange("posture_score:asc")}
         >
           posture ▽
+        </FilterChip>
+        <FilterChip
+          tone="blueprint"
+          selected={sort === "ml_confidence:asc"}
+          onClick={() => onSortChange("ml_confidence:asc")}
+        >
+          ml-conf ▽
         </FilterChip>
         <FilterChip
           tone="blueprint"
@@ -131,6 +163,15 @@ export function FilterBar({ sort, onSortChange }: FilterBarProps) {
       </FilterRow>
     </section>
   );
+}
+
+function countSignal(items: Endpoint[], kind: SignalFlag): number {
+  if (kind === "all") return items.length;
+  if (kind === "needs_review") return items.filter((e) => e.needs_review).length;
+  if (kind === "is_zombie") return items.filter((e) => e.is_zombie).length;
+  if (kind === "is_shadow") return items.filter((e) => e.is_shadow).length;
+  if (kind === "anomaly") return items.filter((e) => e.anomaly_flag).length;
+  return 0;
 }
 
 function FilterRow({

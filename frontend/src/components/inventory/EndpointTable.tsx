@@ -27,6 +27,10 @@ export function EndpointTable({ sort }: EndpointTableProps) {
     sort,
     page,
     page_size: pageSize,
+    needs_review: filters.signal === "needs_review" || undefined,
+    is_zombie: filters.signal === "is_zombie" || undefined,
+    is_shadow: filters.signal === "is_shadow" || undefined,
+    anomaly_flag: filters.signal === "anomaly" || undefined,
   });
 
   const totalPages = useMemo(() => {
@@ -39,6 +43,7 @@ export function EndpointTable({ sort }: EndpointTableProps) {
     if (filters.classification !== "all") parts.push(`classification = ${filters.classification}`);
     if (filters.risk_tier !== "all") parts.push(`tier = ${filters.risk_tier}`);
     if (filters.source !== "all") parts.push(`source = ${filters.source}`);
+    if (filters.signal !== "all") parts.push(`signal = ${filters.signal.replace("is_", "")}`);
     if (filters.search) parts.push(`path ~ ${filters.search}`);
     return parts.length > 0 ? `filter: ${parts.join(", ")}` : "no filters applied";
   }, [filters]);

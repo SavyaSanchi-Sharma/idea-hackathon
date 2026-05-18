@@ -16,15 +16,16 @@ export function ClassificationCards() {
   const isScanning = scanStatus === "running";
 
   const totalDiscovered =
-    liveStats?.total_discovered ?? summary?.total_discovered ?? summary?.registry_baseline ?? 247;
-  const active = liveStats?.active ?? summary?.active ?? 198;
+    liveStats?.total_discovered ?? summary?.total_discovered ?? 0;
+  const active = liveStats?.active ?? summary?.active ?? 0;
   const deprecated = liveStats?.deprecated ?? summary?.deprecated ?? 0;
   const orphaned = liveStats?.orphaned ?? summary?.orphaned ?? 0;
   const critical = liveStats?.critical ?? summary?.critical ?? 0;
 
-  const baseline = summary?.registry_baseline ?? 247;
-  const activeDelta = active - baseline;
-  const deprecatedDelta = Math.max(0, deprecated - 38);
+  const baseline = summary?.registry_baseline ?? 0;
+  // "delta from baseline" framings only make sense once a baseline is known.
+  const activeDelta = baseline > 0 ? active - baseline : 0;
+  const deprecatedDelta = deprecated;
   const orphanedDelta = orphaned;
   const criticalDelta = critical;
 

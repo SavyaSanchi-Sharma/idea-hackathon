@@ -1,11 +1,14 @@
 import { create } from "zustand";
 import type { Classification, DiscoverySource, RiskTier } from "@/types/models";
 
+export type SignalFlag = "all" | "needs_review" | "is_zombie" | "is_shadow" | "anomaly";
+
 export interface InventoryFilters {
   classification: Classification | "all";
   risk_tier: RiskTier | "all";
   source: DiscoverySource | "all";
   search: string;
+  signal: SignalFlag;
 }
 
 export type GraphMode = "normal" | "blast_radius";
@@ -28,6 +31,7 @@ const DEFAULT_FILTERS: InventoryFilters = {
   risk_tier: "all",
   source: "all",
   search: "",
+  signal: "all",
 };
 
 export const useUiStore = create<UiState>((set) => ({

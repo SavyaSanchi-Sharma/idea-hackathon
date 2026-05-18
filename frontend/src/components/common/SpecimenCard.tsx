@@ -4,8 +4,18 @@ import type { Endpoint } from "@/types/models";
 import { Badge } from "./Badge";
 import { InstrumentReadout } from "./InstrumentReadout";
 import { MethodPill } from "./MethodPill";
+import { SignalBadge, type SignalKind } from "./SignalBadge";
 import { SpecimenFrame, type DecayStyle } from "./SpecimenFrame";
 import { SpecimenId } from "./SpecimenId";
+
+function signalKinds(ep: Endpoint): SignalKind[] {
+  const out: SignalKind[] = [];
+  if (ep.is_zombie) out.push("zombie");
+  if (ep.is_shadow) out.push("shadow");
+  if (ep.anomaly_flag) out.push("anomaly");
+  if (ep.needs_review) out.push("review");
+  return out;
+}
 
 export type SpecimenCardLayout = "stacked" | "row";
 
@@ -117,6 +127,7 @@ function StackedBody({
   tone: "bone" | "deprecated" | "orphaned" | "critical";
   showRegistryOnly: boolean;
 }) {
+  const sigs = signalKinds(endpoint);
   return (
     <div className="flex flex-col gap-[10px]">
       <div className="flex items-center justify-between gap-3">
@@ -138,6 +149,14 @@ function StackedBody({
           {endpoint.path}
         </span>
       </div>
+
+      {sigs.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-[6px]">
+          {sigs.map((k) => (
+            <SignalBadge key={k} kind={k} />
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex items-baseline justify-between gap-[8px] text-[11px] font-mono text-bone-dim">
         <span className="truncate">
@@ -172,6 +191,7 @@ function RowBody({
   reducedTilt: boolean;
 }) {
   const trendSign = endpoint.traffic.trend_pct > 0 ? "+" : "";
+  const sigs = signalKinds(endpoint);
   return (
     <div className="flex flex-col gap-[6px]">
       <div className="flex items-center gap-[12px] min-w-0">
@@ -185,7 +205,10 @@ function RowBody({
         >
           {endpoint.path}
         </span>
-        <div className="flex items-center gap-[12px] shrink-0">
+        <div className="flex items-center gap-[8px] shrink-0">
+          {sigs.map((k) => (
+            <SignalBadge key={k} kind={k} compact />
+          ))}
           <InstrumentReadout
             label="posture"
             value={endpoint.posture_score}

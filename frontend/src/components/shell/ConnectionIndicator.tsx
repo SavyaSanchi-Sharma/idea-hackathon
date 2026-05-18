@@ -7,10 +7,9 @@ const TONE: Record<
   ReturnType<typeof useWebSocketStatus>,
   { dot: string; text: string; label: string }
 > = {
-  open: { dot: "bg-active", text: "text-active", label: "connected" },
+  open: { dot: "bg-active", text: "text-active", label: "live" },
   connecting: { dot: "bg-deprecated", text: "text-deprecated", label: "connecting" },
   closed: { dot: "bg-critical", text: "text-critical", label: "disconnected" },
-  fixture: { dot: "bg-blueprint", text: "text-blueprint", label: "simulated stream" },
 };
 
 /**

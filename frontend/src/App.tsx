@@ -7,6 +7,7 @@ import CommandCenter from "@/pages/CommandCenter";
 import Inventory from "@/pages/Inventory";
 import Landscape from "@/pages/Landscape";
 import Reports from "@/pages/Reports";
+import ReviewQueue from "@/pages/ReviewQueue";
 
 export default function App() {
   useWebSocketBridge();
@@ -20,6 +21,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<CommandCenter />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/review" element={<ReviewQueue />} />
             <Route path="/landscape" element={<Landscape />} />
             <Route path="/reports" element={<Reports />} />
           </Routes>

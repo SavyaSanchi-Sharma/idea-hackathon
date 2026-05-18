@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DepthMeter } from "@/components/command-center/DepthMeter";
 import { ClassificationCards } from "@/components/command-center/ClassificationCards";
+import { ModelHealthStrip } from "@/components/command-center/ModelHealthStrip";
 import { TopRiskList } from "@/components/command-center/TopRiskList";
 import { ScanFeed } from "@/components/command-center/ScanFeed";
 import { useLiveStore } from "@/store/liveStore";
@@ -40,6 +41,7 @@ export default function CommandCenter() {
     <div className="flex h-full min-h-0 flex-col">
       <DepthMeter />
       <ClassificationCards />
+      <ModelHealthStrip />
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[3fr_2fr]">
         <TopRiskList />
         <ScanFeed />
