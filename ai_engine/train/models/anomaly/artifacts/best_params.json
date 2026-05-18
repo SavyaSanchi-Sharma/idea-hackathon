@@ -1,0 +1,9 @@
+{
+  "best_params": {
+    "n_estimators": 200,
+    "contamination": 0.05,
+    "max_samples": 512
+  },
+  "train_f1": 0.6764705882352942,
+  "test_f1": 0.6506024096385542
+}

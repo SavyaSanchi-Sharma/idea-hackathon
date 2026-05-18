@@ -1,0 +1,9 @@
+{
+  "best_params": {
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "max_iter": 100
+  },
+  "best_cv_f1_macro": 0.9929475719213654,
+  "test_accuracy": 0.9869791666666666
+}
