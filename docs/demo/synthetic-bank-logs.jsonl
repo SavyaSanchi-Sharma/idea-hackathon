@@ -1,0 +1,30 @@
+{"timestamp":"2026-05-21T10:00:00Z","method":"GET","path":"/v1/accounts/12345/balance","status":200,"latency_ms":42,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:01Z","method":"GET","path":"/v1/accounts/67890/balance","status":200,"latency_ms":38,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:02Z","method":"POST","path":"/v1/transfers","status":201,"latency_ms":105,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:03Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":52}
+{"timestamp":"2026-05-21T10:00:04Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":61}
+{"timestamp":"2026-05-21T10:00:05Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":58}
+{"timestamp":"2026-05-21T10:00:06Z","method":"POST","path":"/v1/legacy/transfer","status":200,"latency_ms":47}
+{"timestamp":"2026-05-21T10:00:07Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":55}
+{"timestamp":"2026-05-21T10:00:08Z","method":"GET","path":"/v1/cards/list","status":200,"latency_ms":33,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:09Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":60}
+{"timestamp":"2026-05-21T10:00:10Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":62}
+{"timestamp":"2026-05-21T10:00:11Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":59}
+{"timestamp":"2026-05-21T10:00:12Z","method":"GET","path":"/v1/accounts/22222/statements","status":200,"latency_ms":120,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:13Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":61}
+{"timestamp":"2026-05-21T10:00:14Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":58}
+{"timestamp":"2026-05-21T10:00:15Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":63}
+{"timestamp":"2026-05-21T10:00:16Z","method":"GET","path":"/v1/upi/vpa","status":200,"latency_ms":80,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:17Z","method":"POST","path":"/v1/legacy/transfer","status":200,"latency_ms":52}
+{"timestamp":"2026-05-21T10:00:18Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":60}
+{"timestamp":"2026-05-21T10:00:19Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":57}
+{"timestamp":"2026-05-21T10:00:20Z","method":"GET","path":"/v1/kyc/aadhaar/3fa85f64-5717-4562-b3fc-2c963f66afa6","status":200,"latency_ms":250,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:21Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":61}
+{"timestamp":"2026-05-21T10:00:22Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":58}
+{"timestamp":"2026-05-21T10:00:23Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":59}
+{"timestamp":"2026-05-21T10:00:24Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":62}
+{"timestamp":"2026-05-21T10:00:25Z","method":"GET","path":"/v1/accounts/55555/balance","status":200,"latency_ms":40,"headers":{"authorization":"Bearer x"}}
+{"timestamp":"2026-05-21T10:00:26Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":63}
+{"timestamp":"2026-05-21T10:00:27Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":57}
+{"timestamp":"2026-05-21T10:00:28Z","method":"POST","path":"/v1/legacy/transfer","status":200,"latency_ms":53}
+{"timestamp":"2026-05-21T10:00:29Z","method":"POST","path":"/v1/legacy/transfer","status":401,"latency_ms":60}

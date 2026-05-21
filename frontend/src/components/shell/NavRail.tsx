@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/inventory", glyph: "◇", label: "inventory", subtitle: "specimen catalog" },
   { to: "/review", glyph: "⊘", label: "review queue", subtitle: "rule ≠ ml disagreement" },
   { to: "/landscape", glyph: "▣", label: "landscape", subtitle: "stratigraphic cross-section" },
+  { to: "/boreholes", glyph: "◉", label: "boreholes", subtitle: "live formation probes" },
   { to: "/reports", glyph: "▷", label: "reports", subtitle: "compliance · phase 3" },
 ];
 

@@ -10,6 +10,7 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "command center", subtitle: "depth scan" },
   "/inventory": { title: "inventory", subtitle: "specimen catalog" },
   "/landscape": { title: "landscape", subtitle: "stratigraphic cross-section" },
+  "/boreholes": { title: "boreholes", subtitle: "live formation probes" },
   "/reports": { title: "reports", subtitle: "compliance · phase 3" },
 };
 
@@ -21,7 +22,11 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
 export function TopBar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const meta = TITLES[pathname] ?? { title: "zombiehunter", subtitle: "strata" };
+  const meta =
+    TITLES[pathname] ??
+    (pathname.startsWith("/boreholes/")
+      ? { title: "borehole", subtitle: "live probe · per-site monitor" }
+      : { title: "zombiehunter", subtitle: "strata" });
   const { runScan, isStarting } = useScan();
   const scanStatus = useLiveStore((s) => s.scanStatus);
   const progress = useLiveStore((s) => s.progress);

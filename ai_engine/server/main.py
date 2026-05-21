@@ -9,13 +9,28 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
+# Load .env (repo root) before any module reads os.environ. No-op if missing.
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+except ImportError:
+    pass
+
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .inference_pipeline import MODELS, run_inference, InferenceResult
+from .inference_pipeline import MODELS, predict_one, run_inference, InferenceResult
 from .mapping import to_endpoint_list
 from .scan_sim import ScanState, build_event_plan, new_scan_id
+from .chat.router import build_router as build_chat_router
+from .ingest.buffer import BufferRegistry
+from .ingest.runner import IngestRunner
+from .ingest.site_state import SiteStateRegistry
+from .ingest.ws_hub import WSHub
+from .llm.client import LLMClient
+from .sites.db import SiteDB
+from .sites.router import attach_websocket, build_router
 
 
 # ─── startup: run inference once, cache the materialized endpoint list ──────
@@ -27,6 +42,13 @@ class State:
     summary: dict = {}
     event_plan: list[dict] = []
     scans: dict[str, ScanState] = {}
+    # ─── live-ingest plane (Phase 2)
+    site_db: SiteDB | None = None
+    site_runner: IngestRunner | None = None
+    ws_hub: WSHub | None = None
+    buffers: BufferRegistry | None = None
+    site_states: SiteStateRegistry | None = None
+    llm: LLMClient | None = None
 
 
 state = State()
@@ -49,6 +71,22 @@ def _summary(endpoints: list[dict]) -> dict:
     }
 
 
+# Live-ingest singletons are built at module load so the sites router can be
+# mounted on the app *before* lifespan runs. They hold no event-loop resources
+# until start_site() is called (which happens inside lifespan / POST /api/sites).
+state.site_db = SiteDB(os.environ.get("ZH_SITES_DB", "zh_sites.db"))
+state.buffers = BufferRegistry(maxlen=10_000)
+state.site_states = SiteStateRegistry()
+state.ws_hub = WSHub()
+state.site_runner = IngestRunner(
+    states=state.site_states,
+    buffers=state.buffers,
+    ws_hub=state.ws_hub,
+    predict_fn=predict_one,
+)
+state.llm = LLMClient()
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     print("[zh-server] loading model artifacts and running inference…")
@@ -63,11 +101,47 @@ async def lifespan(_app: FastAPI):
     state.endpoints_by_id = {e["id"]: e for e in state.endpoints}
     state.summary = _summary(state.endpoints)
     state.event_plan = build_event_plan(state.inference.features, state.inference.predictions)
-    print(f"[zh-server] ready · {len(state.endpoints)} endpoints · {time.time() - t0:.1f}s")
+
+    # Re-attach persisted sites (created in a prior process lifetime).
+    for site in state.site_db.list_active():
+        try:
+            await state.site_runner.start_site(site)
+        except Exception as e:
+            print(f"[zh-server] could not re-attach site {site['id']}: {e}")
+            state.site_db.set_status(site["id"], "error")
+
+    print(f"[zh-server] ready · {len(state.endpoints)} endpoints · "
+          f"{len(state.site_db.list_active())} live sites · {time.time() - t0:.1f}s")
     yield
+
+    # Shutdown
+    await state.site_runner.shutdown()
+    state.site_db.close()
 
 
 app = FastAPI(title="ZombieHunter AI", lifespan=lifespan)
+
+# Mount the sites router + WS handler.
+app.include_router(build_router(
+    db=state.site_db,
+    runner=state.site_runner,
+    ws_hub=state.ws_hub,
+    buffers=state.buffers,
+    states=state.site_states,
+))
+app.include_router(build_chat_router(
+    db=state.site_db,
+    buffers=state.buffers,
+    states=state.site_states,
+    llm=state.llm,
+))
+attach_websocket(
+    app,
+    db=state.site_db,
+    ws_hub=state.ws_hub,
+    buffers=state.buffers,
+    states=state.site_states,
+)
 
 _default_origins = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
 _allowed_origins = [o.strip() for o in os.environ.get("ZH_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
