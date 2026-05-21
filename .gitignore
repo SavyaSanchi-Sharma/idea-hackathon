@@ -1,11 +1,33 @@
+# Node / Vite (frontend)
 node_modules
 dist
 dist-ssr
-*.local
 .vite
-.DS_Store
-.env.local
-.env
-.env.*.local
-.claude/
+*.local
+
+# Python (ai_engine)
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# Trained model artifacts (local-only, not checked in)
+ai_engine/train/models/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Claude Code local config
+.claude/
