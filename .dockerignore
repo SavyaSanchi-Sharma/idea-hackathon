@@ -1,0 +1,52 @@
+# Build context exclusions — keep the image small and the build cache stable.
+
+# Frontend, design, docs — not part of the backend image
+frontend/
+design/
+docs/
+
+# VCS + tooling
+.git/
+.github/
+.gitignore
+.claude/
+.vscode/
+.idea/
+
+# Markdown (README et al.) — not needed at runtime
+*.md
+
+# Local env files (never bake secrets into images)
+.env
+.env.*
+
+# Python build/cache artefacts
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / Vite build outputs (in case of stray copies)
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+
+# Test artefacts (must never ship in container images)
+test-results/
+playwright-report/
+coverage/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Docker meta — exclude self
+Dockerfile
+.dockerignore

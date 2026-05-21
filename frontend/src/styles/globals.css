@@ -114,6 +114,16 @@
   100% { opacity: 0;   transform: scaleX(1); }
 }
 
+/* Blast-radius node stroke overlay — fades the critical-red 2px ring in once
+   the fault arrives at that node. Used both for the ring circle and the ╳
+   glyph that lands on the reached specimen. The dashoffset draw on the
+   fault edges themselves is handled by a JS-state-driven CSS transition
+   inside StratigraphicGraph; this keyframe covers the node-side reveal. */
+@keyframes blast-stroke-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .caret-blink {
   animation: caret-blink 1.1s steps(1, end) infinite;
 }

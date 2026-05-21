@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from .inference_pipeline import MODELS, run_inference, InferenceResult
 from .mapping import to_endpoint_list
@@ -66,9 +68,13 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="ZombieHunter AI", lifespan=lifespan)
+
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
+_allowed_origins = [o.strip() for o in os.environ.get("ZH_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173"],
+    allow_origins=_allowed_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -212,16 +218,20 @@ def get_model_metrics():
     return out
 
 
+class ActionRequest(BaseModel):
+    action: Literal["monitor", "quarantine", "block", "playbook"]
+    note: str | None = None
+
+
 @app.post("/api/endpoints/{endpoint_id}/action")
-def post_endpoint_action(endpoint_id: str, body: dict):
+def post_endpoint_action(endpoint_id: str, body: ActionRequest):
     if endpoint_id not in state.endpoints_by_id:
         raise HTTPException(status_code=404, detail=f"endpoint {endpoint_id} not found")
-    action = body.get("action")
-    if action not in {"monitor", "quarantine", "block", "playbook"}:
-        raise HTTPException(status_code=400, detail=f"invalid action {action!r}")
     # Side-effect-free demo backend — record on the endpoint so subsequent
     # reads reflect the operator's last decision.
-    state.endpoints_by_id[endpoint_id]["recommended_action"] = action
+    state.endpoints_by_id[endpoint_id]["recommended_action"] = body.action
+    # body.note is accepted for forward compat; not persisted in this demo build.
+    _ = body.note
     return {"ok": True}
 
 
