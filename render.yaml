@@ -1,0 +1,27 @@
+# Render Blueprint for ZombieHunter.
+# Render → New + → Blueprint → connect this repo. Render reads this file and
+# provisions the service below. See README "Deployment" section for the full flow.
+
+services:
+  - type: web
+    name: zombiehunter-api
+    runtime: docker
+    plan: free
+    # Indian PSB audience — singapore is the closest Render region.
+    # Swap to `oregon` if the reviewer base is US-centric.
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ZH_HOST
+        value: 0.0.0.0
+      - key: ZH_PORT
+        value: "8000"
+      # IMPORTANT: after the first Vercel frontend deploy, edit this value in the
+      # Render dashboard (or here + redeploy) to the deployed frontend origin —
+      # e.g. https://zombiehunter.vercel.app  (comma-separate to allow multiple).
+      # The backend reads this list and uses it for CORSMiddleware.allow_origins.
+      - key: ZH_ALLOWED_ORIGINS
+        value: https://REPLACE-WITH-YOUR-VERCEL-URL.vercel.app

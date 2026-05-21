@@ -41,13 +41,13 @@ git clone https://github.com/SavyaSanchi-Sharma/idea-hackathon
 cd idea-hackathon
 
 # 2. Backend — FastAPI + scikit-learn (port 8000)
-cd ai_engine
-pip install -r server/requirements.txt
-python -m server.run
+# from repo root
+pip install -r ai_engine/server/requirements.txt
+python -m ai_engine.server.run
 # inference runs once at startup; first request is served immediately after
 
 # 3. Frontend — Vite dev server (port 5173)
-cd ../frontend
+cd frontend
 npm install
 npm run dev
 
@@ -56,6 +56,56 @@ npm run dev
 ```
 
 Backend health check: `http://localhost:8000/health` should return `{"status":"ok","endpoints_loaded":1920}`.
+
+## Deployment
+
+Free-tier path: **frontend on Vercel, backend on Render** (Docker). Both auto-deploy from `main`. The order matters — the frontend URL has to exist before the backend can be told to trust it for CORS.
+
+> **Render free-tier note.** The backend sleeps after 15 minutes of inactivity. The first request after sleep takes ~30 seconds to wake the container; subsequent requests are fast. The frontend's HTTP client retries, so the UI recovers on its own — just be patient on the very first scan.
+
+### 1. Push the repo to GitHub
+Already done — `https://github.com/SavyaSanchi-Sharma/idea-hackathon`. Make sure your local `main` is up to date with origin.
+
+### 2. Deploy the frontend to Vercel *first*
+We need the Vercel URL before the backend can be configured.
+
+1. On [vercel.com](https://vercel.com), **Add New Project** → import the GitHub repo.
+2. Set **Root Directory** to `frontend`.
+3. Framework preset auto-detects as **Vite** (confirmed by `frontend/vercel.json`). Leave it.
+4. **Do not click Deploy yet.** Open **Environment Variables** and add:
+   - `VITE_API_BASE_URL` = `https://zombiehunter-api.onrender.com` *(placeholder — we'll correct this in step 4 once the real Render URL exists)*
+   - `VITE_WS_URL` = `wss://zombiehunter-api.onrender.com/ws` *(note `wss://`, not `ws://`)*
+5. Click **Deploy**. Copy the resulting URL (e.g. `https://zombiehunter.vercel.app`).
+
+### 3. Deploy the backend to Render
+1. On [render.com](https://render.com), **New +** → **Blueprint** → connect the GitHub repo.
+2. Render auto-detects `render.yaml` and shows one service: `zombiehunter-api` (Docker, `singapore` region, free plan).
+3. **Before applying**, edit the `ZH_ALLOWED_ORIGINS` env var on the service and set it to the Vercel URL from step 2 — e.g. `https://zombiehunter.vercel.app`. Comma-separate if you want to allow multiple origins (preview deploys, custom domain, etc.).
+4. Click **Apply**. The first build takes ~5–10 minutes on the free tier (image build + cold pip install).
+5. Once `/health` is green, copy the service URL (e.g. `https://zombiehunter-api.onrender.com`).
+
+### 4. Update the frontend with the real backend URL
+1. In Vercel → Project → **Settings** → **Environment Variables**, edit:
+   - `VITE_API_BASE_URL` → real Render URL (`https://zombiehunter-api.onrender.com`)
+   - `VITE_WS_URL` → `wss://zombiehunter-api.onrender.com/ws`
+2. Trigger a redeploy: **Deployments** → latest → **... → Redeploy**. (Vite env vars are baked at build time, so an env change alone is not enough — you must redeploy.)
+
+### 5. Verify
+```bash
+# Backend health (this also wakes the dyno if it slept)
+curl https://<your-render-url>/health
+# → {"status":"ok","endpoints_loaded":1920}
+```
+Then open `https://<your-vercel-url>` in an **incognito window** (avoids stale env vars cached on a logged-in tab), click **Run Discovery Scan**, and confirm specimens populate. WebSocket scan stream should tick to 100% in ~8 seconds.
+
+### 6. Wire the live URLs into the README
+Update the **Live Demo** section at the top of this file with both URLs and commit.
+
+### Operational notes
+- **Auto-deploy** is on for both platforms — every push to `main` triggers a rebuild on Render and Vercel.
+- **Rollback.** Render: service → **Deploys** → pick a green commit → **Rollback to this deploy**. Vercel: **Deployments** → previous → **Promote to Production**.
+- **CORS errors after deploy** almost always mean `ZH_ALLOWED_ORIGINS` on Render doesn't include the *exact* Vercel origin (scheme + host, no trailing slash). Update the env var in the Render dashboard and the service will restart.
+- **Updating the backend env var** through `render.yaml` requires a Blueprint sync. Editing it directly in the Render dashboard is faster for one-offs.
 
 ## Project Structure
 

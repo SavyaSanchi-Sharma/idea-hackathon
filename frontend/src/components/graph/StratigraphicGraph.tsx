@@ -3,6 +3,14 @@ import { motion } from "framer-motion";
 import { select } from "d3-selection";
 import { zoom as d3zoom, type ZoomBehavior, zoomIdentity } from "d3-zoom";
 import type { ApiGraph, Classification, GraphNode, ServiceLane } from "@/types/models";
+import { useUiStore } from "@/store/uiStore";
+
+/** Per-hop stagger for the fault-line BFS sweep (ms). 4 hops × 600ms = 2.4s. */
+const BLAST_HOP_MS = 600;
+/** Duration each individual fault edge takes to draw itself (ms). */
+const BLAST_EDGE_DRAW_MS = 300;
+/** Max BFS depth to animate. Beyond this the rest is just "unreachable". */
+const BLAST_MAX_HOPS = 4;
 
 const LANES: ServiceLane[] = [
   "auth",
@@ -63,6 +71,32 @@ export function StratigraphicGraph({
   const [size, setSize] = useState({ w: 1200, h: 720 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
+
+  // Blast-radius mode: drives the fault-line propagation overlay.
+  const graphMode = useUiStore((s) => s.graphMode);
+  const blastOriginId = useUiStore((s) => s.blastRadiusOriginId);
+  const blastActive = graphMode === "blast_radius" && !!blastOriginId;
+
+  // Detect prefers-reduced-motion so we can snap the propagation instead of
+  // animating it. We re-evaluate on mount because the media query may differ
+  // per session.
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduceMotion(mq.matches);
+    apply();
+    mq.addEventListener?.("change", apply);
+    return () => mq.removeEventListener?.("change", apply);
+  }, []);
+
+  // Restart-key forces the CSS transitions to replay every time blast mode is
+  // (re)engaged or the origin changes. Without this React would reuse the
+  // existing <path> elements and the dashoffset transition wouldn't fire.
+  const [blastEpoch, setBlastEpoch] = useState(0);
+  useEffect(() => {
+    if (blastActive) setBlastEpoch((e) => e + 1);
+  }, [blastActive, blastOriginId]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -191,6 +225,55 @@ export function StratigraphicGraph({
       }>;
   }, [graph.edges, positionedById]);
 
+  // BFS hop layers from the blast origin, computed on the positioned-endpoint
+  // adjacency (edges between drawn nodes). Undirected: a fault propagates both
+  // ways. Origin is hop 0; the API only returns immediate fan-out so we run
+  // our own BFS up to BLAST_MAX_HOPS. Returns null when blast mode is inactive.
+  const blastHops = useMemo(() => {
+    if (!blastActive || !blastOriginId) return null;
+    if (!positionedById.has(blastOriginId)) return null;
+
+    // Build undirected adjacency.
+    const adj = new Map<string, string[]>();
+    for (const e of edges) {
+      if (!adj.has(e.source.id)) adj.set(e.source.id, []);
+      if (!adj.has(e.target.id)) adj.set(e.target.id, []);
+      adj.get(e.source.id)!.push(e.target.id);
+      adj.get(e.target.id)!.push(e.source.id);
+    }
+
+    const nodeHop = new Map<string, number>();
+    nodeHop.set(blastOriginId, 0);
+    const queue: string[] = [blastOriginId];
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      const curHop = nodeHop.get(cur)!;
+      if (curHop >= BLAST_MAX_HOPS) continue;
+      const nexts = adj.get(cur) ?? [];
+      for (const n of nexts) {
+        if (!nodeHop.has(n)) {
+          nodeHop.set(n, curHop + 1);
+          queue.push(n);
+        }
+      }
+    }
+
+    // An edge is on the fault path when both endpoints are reached AND the
+    // hop indices differ by 1 (i.e. it was traversed during BFS). Its hop
+    // index is the larger of the two — the moment the fault reaches the
+    // farther node.
+    const edgeHop = new Map<number, number>();
+    edges.forEach((e, i) => {
+      const a = nodeHop.get(e.source.id);
+      const b = nodeHop.get(e.target.id);
+      if (a === undefined || b === undefined) return;
+      if (Math.abs(a - b) !== 1) return;
+      edgeHop.set(i, Math.max(a, b));
+    });
+
+    return { nodeHop, edgeHop };
+  }, [blastActive, blastOriginId, edges, positionedById]);
+
   return (
     <div
       ref={containerRef}
@@ -296,7 +379,7 @@ export function StratigraphicGraph({
             strokeWidth={1}
           />
 
-          {/* Edges */}
+          {/* Edges — base layer (always rendered; dimmed under blast). */}
           {edges.map((e, i) => {
             const sFiltered = !matchesFilters(e.source);
             const tFiltered = !matchesFilters(e.target);
@@ -304,7 +387,14 @@ export function StratigraphicGraph({
             const isSelected =
               selectedId !== null && (e.source.id === selectedId || e.target.id === selectedId);
             const baseOpacity = e.crossesStrata ? 0.5 : 0.25;
-            const opacity = isSelected ? 1 : dim ? 0.05 : baseOpacity;
+            const onFault = blastHops?.edgeHop.has(i) ?? false;
+            // In blast mode every original edge dims to ghost-opacity except
+            // the ones the fault traverses (they're already going to be
+            // re-painted in critical-red as the overlay).
+            let opacity = isSelected ? 1 : dim ? 0.05 : baseOpacity;
+            if (blastActive) {
+              opacity = onFault ? 0.18 : 0.12;
+            }
             const strokeColor = isSelected
               ? "var(--blueprint)"
               : e.crossesStrata
@@ -325,12 +415,54 @@ export function StratigraphicGraph({
             );
           })}
 
+          {/* Fault-line overlay — only in blast mode. Each edge on the BFS
+              path draws itself from origin → target via a dashoffset
+              transition, staggered by hop × BLAST_HOP_MS. */}
+          {blastActive && blastHops ? (
+            <g key={`fault-${blastEpoch}`} aria-hidden>
+              {edges.map((e, i) => {
+                const hop = blastHops.edgeHop.get(i);
+                if (hop === undefined) return null;
+                const mid = midpoint(e.source.x, e.source.y, e.target.x, e.target.y);
+                const cpY = mid.y + Math.abs(e.target.y - e.source.y) * 0.18;
+                const d = `M ${e.source.x} ${e.source.y} Q ${mid.x} ${cpY} ${e.target.x} ${e.target.y}`;
+                // Cheap path-length proxy: straight-line distance scaled up to
+                // approximate the cubic-Bézier arc. Good enough for a draw-in.
+                const dx = e.target.x - e.source.x;
+                const dy = e.target.y - e.source.y;
+                const length = Math.max(40, Math.sqrt(dx * dx + dy * dy) * 1.05);
+                const delayMs = hop * BLAST_HOP_MS;
+                return (
+                  <FaultEdge
+                    key={i}
+                    d={d}
+                    length={length}
+                    delayMs={delayMs}
+                    drawMs={BLAST_EDGE_DRAW_MS}
+                    snap={reduceMotion}
+                  />
+                );
+              })}
+            </g>
+          ) : null}
+
           {/* Nodes */}
           {positioned.map((n) => {
             const dim = !matchesFilters(n);
             const isSelected = selectedId === n.id;
             const isOther = selectedId !== null && !isSelected;
-            const opacity = dim ? 0.15 : isOther ? 0.5 : 1;
+            let opacity = dim ? 0.15 : isOther ? 0.5 : 1;
+
+            // Blast-radius overlay state for this node.
+            const hop = blastHops?.nodeHop.get(n.id);
+            const reachable = hop !== undefined;
+            const isOrigin = blastActive && n.id === blastOriginId;
+            if (blastActive) {
+              // Unreachable nodes drop to the ghost layer; reachable nodes
+              // stay at full opacity so the fault highlights read.
+              opacity = reachable ? 1 : 0.12;
+            }
+
             return (
               <Node
                 key={n.id}
@@ -343,6 +475,11 @@ export function StratigraphicGraph({
                   setSelectedId(n.id);
                   onSelectEndpoint(n.id);
                 }}
+                blastReached={blastActive && reachable}
+                blastHop={hop ?? null}
+                blastIsOrigin={isOrigin}
+                blastEpoch={blastEpoch}
+                blastSnap={reduceMotion}
               />
             );
           })}
@@ -367,6 +504,11 @@ function Node({
   isHovered,
   onHover,
   onClick,
+  blastReached,
+  blastHop,
+  blastIsOrigin,
+  blastEpoch,
+  blastSnap,
 }: {
   node: PositionedNode;
   opacity: number;
@@ -374,6 +516,11 @@ function Node({
   isHovered: boolean;
   onHover: (h: boolean) => void;
   onClick: () => void;
+  blastReached: boolean;
+  blastHop: number | null;
+  blastIsOrigin: boolean;
+  blastEpoch: number;
+  blastSnap: boolean;
 }) {
   const classification = node.classification ?? "active";
   const tier = node.risk_tier ?? "low";
@@ -406,6 +553,10 @@ function Node({
   const yearsAgo = Math.max(0, new Date().getFullYear() - node.year);
   const delay = Math.min(0.9, yearsAgo * 0.006);
 
+  // Show the ╳ overlay either because this node is naturally a critical
+  // orphan (existing behavior) OR because the blast wave has reached it.
+  const showCross = isCritical || blastReached;
+
   return (
     <motion.g
       initial={{ y: -node.y, opacity: 0 }}
@@ -426,28 +577,33 @@ function Node({
           strokeWidth={2}
         />
       ) : null}
-      <circle
+      <BlastNodeCircle
         cx={node.x}
         cy={node.y}
         r={node.r}
-        fill={fill}
-        fillOpacity={fillOpacity}
-        stroke={stroke}
-        strokeWidth={isCritical ? 1.5 : 1}
-        strokeDasharray={dashArray}
+        baseFill={fill}
+        baseFillOpacity={fillOpacity}
+        baseStroke={stroke}
+        baseStrokeWidth={isCritical ? 1.5 : 1}
+        baseDashArray={dashArray}
+        blastReached={blastReached}
+        blastHop={blastHop}
+        blastIsOrigin={blastIsOrigin}
+        blastEpoch={blastEpoch}
+        blastSnap={blastSnap}
       />
-      {isCritical ? (
-        <text
+      {showCross ? (
+        <BlastCross
           x={node.x}
           y={node.y + 3}
-          textAnchor="middle"
-          className="font-mono"
-          style={{ fontSize: 10, fill: "var(--critical)", fontWeight: 700 }}
-        >
-          ╳
-        </text>
+          // Existing critical orphans render immediately. Blast-reached nodes
+          // fade their cross in once the fault arrives.
+          delayMs={blastReached && !isCritical && blastHop !== null ? blastHop * BLAST_HOP_MS : 0}
+          snap={blastSnap || isCritical}
+          epoch={blastEpoch}
+        />
       ) : null}
-      {(isHovered || isSelected) && node.metadata.specimen_id ? (
+      {(isHovered || isSelected || blastReached) && node.metadata.specimen_id ? (
         <g>
           <rect
             x={node.x - 32}
@@ -465,7 +621,7 @@ function Node({
             className="font-mono"
             style={{
               fontSize: 10,
-              fill: isCritical ? "var(--critical)" : "var(--bone-dim)",
+              fill: isCritical || blastReached ? "var(--critical)" : "var(--bone-dim)",
             }}
           >
             {String(node.metadata.specimen_id).toLowerCase()}
@@ -473,6 +629,183 @@ function Node({
         </g>
       ) : null}
     </motion.g>
+  );
+}
+
+/** Renders the node circle and — when blast mode reaches it — animates a
+ *  critical-stroke overlay in at hop × BLAST_HOP_MS. The base circle stays
+ *  put so the underlying classification color is still visible. */
+function BlastNodeCircle({
+  cx,
+  cy,
+  r,
+  baseFill,
+  baseFillOpacity,
+  baseStroke,
+  baseStrokeWidth,
+  baseDashArray,
+  blastReached,
+  blastHop,
+  blastIsOrigin,
+  blastEpoch,
+  blastSnap,
+}: {
+  cx: number;
+  cy: number;
+  r: number;
+  baseFill: string;
+  baseFillOpacity: number;
+  baseStroke: string;
+  baseStrokeWidth: number;
+  baseDashArray: string | undefined;
+  blastReached: boolean;
+  blastHop: number | null;
+  blastIsOrigin: boolean;
+  blastEpoch: number;
+  blastSnap: boolean;
+}) {
+  // Origin renders at 2× radius per the spec. Reached nodes adopt critical
+  // stroke (2px). The base classification stroke stays under the overlay so
+  // it's still legible if the overlay opacity hasn't kicked in yet.
+  const originR = blastIsOrigin ? r * 2 : r;
+  const delayMs = blastReached && blastHop !== null && !blastSnap ? blastHop * BLAST_HOP_MS : 0;
+
+  return (
+    <>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={originR}
+        fill={baseFill}
+        fillOpacity={baseFillOpacity}
+        stroke={baseStroke}
+        strokeWidth={baseStrokeWidth}
+        strokeDasharray={baseDashArray}
+        style={{
+          transition: "r 240ms cubic-bezier(0.22,1,0.36,1), opacity 240ms",
+        }}
+      />
+      {blastReached ? (
+        <circle
+          key={`blast-stroke-${blastEpoch}`}
+          cx={cx}
+          cy={cy}
+          r={originR + 0.5}
+          fill="none"
+          stroke="var(--critical)"
+          strokeWidth={2}
+          style={{
+            opacity: 0,
+            animation: blastSnap
+              ? "none"
+              : `blast-stroke-in 200ms cubic-bezier(0.22,1,0.36,1) ${delayMs}ms forwards`,
+            ...(blastSnap ? { opacity: 1 } : null),
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/** The ╳ glyph that lands on each fault-reached node. Same character used
+ *  elsewhere in the product (ScanFeed critical lines, GraphLegend, drawer
+ *  systems-tree write-access prefix). */
+function BlastCross({
+  x,
+  y,
+  delayMs,
+  snap,
+  epoch,
+}: {
+  x: number;
+  y: number;
+  delayMs: number;
+  snap: boolean;
+  epoch: number;
+}) {
+  return (
+    <text
+      key={`cross-${epoch}`}
+      x={x}
+      y={y}
+      textAnchor="middle"
+      className="font-mono"
+      style={{
+        fontSize: 10,
+        fill: "var(--critical)",
+        fontWeight: 700,
+        opacity: snap ? 1 : 0,
+        animation: snap
+          ? "none"
+          : `blast-stroke-in 200ms cubic-bezier(0.22,1,0.36,1) ${delayMs}ms forwards`,
+      }}
+    >
+      ╳
+    </text>
+  );
+}
+
+/** A single fault-line edge overlay. Renders a 2px critical stroke and
+ *  animates stroke-dashoffset from `length → 0`, giving the visual of the
+ *  fault drawing itself from source to target.
+ *
+ *  Implementation: we mount the path with strokeDashoffset = length (fully
+ *  hidden), then on the next paint flip it to 0 via a state change. A CSS
+ *  transition with the per-hop delay carries it across, so each edge appears
+ *  to draw in sequence. */
+function FaultEdge({
+  d,
+  length,
+  delayMs,
+  drawMs,
+  snap,
+}: {
+  d: string;
+  length: number;
+  delayMs: number;
+  drawMs: number;
+  snap: boolean;
+}) {
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    if (snap) {
+      setDrawn(true);
+      return;
+    }
+    // Defer to next frame so the initial offset paints before the transition
+    // target is set — otherwise the browser collapses both states and skips
+    // the animation entirely.
+    const id = requestAnimationFrame(() => setDrawn(true));
+    return () => cancelAnimationFrame(id);
+  }, [snap]);
+
+  if (snap) {
+    return (
+      <path
+        d={d}
+        fill="none"
+        stroke="var(--decay-edge-critical)"
+        strokeWidth={2}
+        strokeLinecap="round"
+        opacity={0.9}
+      />
+    );
+  }
+
+  return (
+    <path
+      d={d}
+      fill="none"
+      stroke="var(--decay-edge-critical)"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeDasharray={length}
+      strokeDashoffset={drawn ? 0 : length}
+      opacity={drawn ? 0.95 : 0.6}
+      style={{
+        transition: `stroke-dashoffset ${drawMs}ms cubic-bezier(0.65,0,0.35,1) ${delayMs}ms, opacity ${drawMs}ms linear ${delayMs}ms`,
+      }}
+    />
   );
 }
 
