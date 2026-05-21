@@ -35,6 +35,24 @@ LABEL_MAP_INV = {0: "active", 1: "deprecated", 2: "orphaned"}
 WEAK_AUTH = {"none", "apiKey", "basic", "apiKey|basic"}
 
 
+# Module-level model cache. Loaded once on first call, shared between
+# `run_inference()` (batch over the static CSV) and `predict_one()` (single
+# row from the live-ingest aggregator).
+_MODELS: dict | None = None
+
+
+def _load_models() -> dict:
+    global _MODELS
+    if _MODELS is None:
+        _MODELS = {
+            "clf_pre": joblib.load(MODELS / "classifier" / "artifacts" / "preprocessor.joblib"),
+            "clf": joblib.load(MODELS / "classifier" / "artifacts" / "model.joblib"),
+            "reg_pre": joblib.load(MODELS / "regressor" / "artifacts" / "preprocessor.joblib"),
+            "reg": joblib.load(MODELS / "regressor" / "artifacts" / "model.joblib"),
+        }
+    return _MODELS
+
+
 def risk_band(score: float) -> str:
     if score >= 90:
         return "critical"
@@ -106,12 +124,12 @@ def run_inference() -> InferenceResult:
     sequences = pd.read_csv(DATA / "lifecycle_sequences.csv")
     features["version_path"] = features["version_path"].astype(str)
 
+    m = _load_models()
+
     # --- classifier ML pass
-    clf_pre = joblib.load(MODELS / "classifier" / "artifacts" / "preprocessor.joblib")
-    clf_model = joblib.load(MODELS / "classifier" / "artifacts" / "model.joblib")
-    X_clf = clf_pre.transform(features[CLF_NUMERIC + CLF_CAT])
-    ml_pred = clf_model.predict(X_clf)
-    ml_proba = clf_model.predict_proba(X_clf)
+    X_clf = m["clf_pre"].transform(features[CLF_NUMERIC + CLF_CAT])
+    ml_pred = m["clf"].predict(X_clf)
+    ml_proba = m["clf"].predict_proba(X_clf)
     ml_state = [LABEL_MAP_INV[i] for i in ml_pred]
     ml_confidence = ml_proba.max(axis=1)
 
@@ -119,10 +137,8 @@ def run_inference() -> InferenceResult:
     rule = classify_batch(features)
 
     # --- regressor pass
-    reg_pre = joblib.load(MODELS / "regressor" / "artifacts" / "preprocessor.joblib")
-    reg_model = joblib.load(MODELS / "regressor" / "artifacts" / "model.joblib")
-    X_reg = reg_pre.transform(features[REG_NUMERIC + REG_CAT])
-    risk = np.clip(reg_model.predict(X_reg), 0, 100)
+    X_reg = m["reg_pre"].transform(features[REG_NUMERIC + REG_CAT])
+    risk = np.clip(m["reg"].predict(X_reg), 0, 100)
 
     # --- anomaly pass (per endpoint from 30-day sequence)
     anom_scaler = joblib.load(MODELS / "anomaly" / "artifacts" / "scaler.joblib")
@@ -183,3 +199,88 @@ def run_inference() -> InferenceResult:
         trend_pct=trend_pct,
         sequences=full_sequences,
     )
+
+
+# ─── single-row inference for live-ingest endpoints ─────────────────────────
+
+# Defaults for log-invisible feature columns. The aggregator fills what logs
+# can show (call_count_7d, auth_fail_rate_7d, p95_latency_ms, last_seen_days,
+# method, path); the rest fall back to these — overridden by the per-site
+# registration where the user supplied real values (runtime, runtime_version,
+# service, owner_present).
+LIVE_FEATURE_DEFAULTS: dict = {
+    "schema_count": 1,
+    "deprecated_flag": 0,
+    "in_registry": 1,
+    "owner_present": 1,
+    "last_deploy_days": 30.0,
+    "max_cvss": 0.0,
+    "cve_id": "",
+    "auth_scheme": "http:bearer",
+    "runtime": "python",
+    "runtime_version": "3.11",
+    "version_path": "v1",
+    "service": "payments",
+}
+
+
+def predict_one(features: dict, endpoint_uid: str) -> dict:
+    """Run the 3-model pipeline on one feature dict and return a frontend Endpoint.
+
+    `features` may be a partial dict; missing keys are filled from
+    LIVE_FEATURE_DEFAULTS. `endpoint_uid` becomes the frontend `id` (overrides
+    the synthetic ep_NNNN that `to_endpoint` would otherwise generate).
+
+    Anomaly is skipped — that model needs a 30-day sequence we don't have for
+    a freshly-discovered live endpoint. anomaly_flag=0, anomaly_score=None.
+    """
+    # local import to avoid circular: mapping imports nothing from this file,
+    # but keeping inference_pipeline import-light is helpful for tooling.
+    from .mapping import to_endpoint
+
+    row = {**LIVE_FEATURE_DEFAULTS, **features}
+    # endpoint_id is required by to_endpoint() (it's used to derive a synthetic
+    # specimen_id and the static ep_NNNN id). Hash uid → stable int outside the
+    # static 0–9999 range so it never collides with the CSV-loaded endpoints.
+    row.setdefault("endpoint_id", 100_000_000 + (hash(endpoint_uid) & 0x7FFFFFFF) % 9_000_000)
+    row.setdefault("endpoint", "/unknown")
+    row.setdefault("method", "GET")
+
+    feat_df = pd.DataFrame([row])
+
+    m = _load_models()
+    X_clf = m["clf_pre"].transform(feat_df[CLF_NUMERIC + CLF_CAT])
+    ml_pred = m["clf"].predict(X_clf)
+    ml_proba = m["clf"].predict_proba(X_clf)
+    ml_state = LABEL_MAP_INV[int(ml_pred[0])]
+    ml_conf = float(ml_proba.max(axis=1)[0])
+
+    rule = classify_batch(feat_df)
+
+    X_reg = m["reg_pre"].transform(feat_df[REG_NUMERIC + REG_CAT])
+    risk = float(np.clip(m["reg"].predict(X_reg)[0], 0, 100))
+
+    findings = "|".join(owasp_findings(feat_df.iloc[0]))
+    finding_count = 0 if findings == "" else len(findings.split("|"))
+
+    pred_row = pd.Series({
+        "endpoint_id": row["endpoint_id"],
+        "rule_state": rule["rule_state"].iloc[0],
+        "rule_is_zombie": int(rule["rule_is_zombie"].iloc[0]),
+        "rule_is_shadow": int(rule["rule_is_shadow"].iloc[0]),
+        "rule_reason": rule["rule_reason"].iloc[0],
+        "ml_state": ml_state,
+        "ml_confidence": round(ml_conf, 4),
+        "needs_review": int(rule["rule_state"].iloc[0] != ml_state),
+        "risk_score": round(risk, 2),
+        "risk_band": risk_band(risk),
+        "anomaly_flag": 0,
+        "anomaly_score": np.nan,
+        "owasp_findings": findings,
+        "finding_count": finding_count,
+    })
+
+    endpoint = to_endpoint(feat_df.iloc[0], pred_row, sparkline=[], trend_pct=0.0)
+    endpoint["id"] = endpoint_uid
+    endpoint["from_live"] = True
+    return endpoint
