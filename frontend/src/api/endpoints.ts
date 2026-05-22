@@ -92,3 +92,45 @@ export const postEndpointAction = (id: string, action: RecommendedAction) =>
     method: "POST",
     body: { action },
   });
+
+export interface ReportResponse {
+  endpoint_id: string;
+  report_kind: "threat_narrative" | "remediation_playbook" | "compliance_summary";
+  framework: string;
+  output: string;
+  generation_ms: number;
+  model: string;
+}
+
+export interface ReportRow {
+  endpoint_id: number[];
+  report_kind: string;
+  framework: string;
+  system_prompt: string;
+  user_context: string;
+  model_output: string;
+  model_name: string;
+  generated_at: number;
+  generation_ms: number;
+}
+
+export const generateNarrative = (id: string) =>
+  apiRequest<ReportResponse>(`/api/endpoints/${encodeURIComponent(id)}/narrative`, {
+    method: "POST",
+  });
+
+export const generatePlaybook = (id: string) =>
+  apiRequest<ReportResponse>(`/api/endpoints/${encodeURIComponent(id)}/playbook`, {
+    method: "POST",
+  });
+
+export type ComplianceFramework = "rbi_2024" | "pci_dss";
+
+export const generateCompliance = (id: string, framework: ComplianceFramework = "rbi_2024") =>
+  apiRequest<ReportResponse>(`/api/endpoints/${encodeURIComponent(id)}/compliance`, {
+    method: "POST",
+    query: { framework },
+  });
+
+export const getEndpointReports = (id: string) =>
+  apiRequest<ReportRow[]>(`/api/endpoints/${encodeURIComponent(id)}/reports`);

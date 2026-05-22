@@ -13,6 +13,7 @@ import { ThreatNarrative } from "./ThreatNarrative";
 import { SignalsGrid } from "./SignalsGrid";
 import { SequenceChart } from "./SequenceChart";
 import { ModelVerdict } from "./ModelVerdict";
+import { SlmReportsPanel } from "./SlmReportsPanel";
 import { postEndpointAction } from "@/api/endpoints";
 import { cn } from "@/lib/cn";
 
@@ -283,6 +284,11 @@ function DrawerBody({
 
       {/* FIELD NOTES */}
       <ThreatNarrative text={endpoint.threat_narrative} specimenId={endpoint.specimen_id} />
+
+      {/* SLM-GENERATED REPORTS */}
+      <section className="px-[24px] py-[16px]">
+        <SlmReportsPanel endpointId={endpoint.id} />
+      </section>
 
       {/* SIGNALS */}
       <SignalsGrid endpoint={endpoint} />

@@ -18,6 +18,33 @@ env/
 # Trained model artifacts (local-only, not checked in)
 ai_engine/train/models/
 
+# Rust build artifacts
+target/
+**/target/
+
+# Cargo flycheck (rust-analyzer)
+**/.flycheck/
+**/flycheck0/
+
+# SQLite runtime state (backend stores)
+pipe/backend/zh_*.db
+pipe/backend/zh_*.db-shm
+pipe/backend/zh_*.db-wal
+pipe/backend/data/
+pipe/endpoint_store/*.db
+pipe/endpoint_store/*.db-shm
+pipe/endpoint_store/*.db-wal
+pipe/graph/*.db
+pipe/graph/*.db-shm
+pipe/graph/*.db-wal
+
+# Backend ad-hoc logs / pids
+*.log
+*.pid
+
+# HuggingFace model cache (when run from repo dir)
+.cache/huggingface/
+
 # Environment / secrets
 .env
 .env.local

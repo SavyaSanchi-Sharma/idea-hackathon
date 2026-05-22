@@ -1,0 +1,26 @@
+port = 8000
+
+[paths]
+graph_db        = "zh_graph.db"
+endpoint_db     = "zh_endpoints.db"
+predictions_db  = "zh_predictions.db"
+reports_db      = "zh_reports.db"
+cve_table       = "../../ai_engine/train/data/generated/cve_table.csv"
+model_artifacts = "../../ai_engine/train/models"
+
+[loop]
+window_secs     = 15
+batch_size_hint = 500
+queue_capacity  = 10000
+
+[slm]
+model_name     = "Qwen/Qwen2.5-0.5B-Instruct"
+device         = "cpu"
+max_new_tokens = 320
+timeout_ms     = 60000
+
+[models]
+pinned_sklearn = ""
+
+[cors]
+allowed_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]

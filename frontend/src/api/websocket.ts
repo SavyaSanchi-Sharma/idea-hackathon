@@ -1,10 +1,25 @@
 import type { Endpoint, ScanEvent, ScanJob, ScanStats } from "@/types/models";
 
+export interface EndpointUpdatePayload {
+  endpoint_id: string;
+  rule_state: string;
+  ml_state: string;
+  risk_score: number;
+  risk_band: string;
+  needs_review: boolean;
+  finding_count: number;
+}
+
 export type WsMessage =
   | { type: "scan_progress"; payload: { scan_id: string; progress: number; stats: ScanStats } }
+  | { type: "ScanProgress"; payload: { scan_id: string; progress: number; stats: ScanStats } }
   | { type: "scan_event"; payload: ScanEvent }
+  | { type: "ScanEvent"; payload: ScanEvent }
   | { type: "endpoint_update"; payload: Endpoint }
-  | { type: "scan_complete"; payload: ScanJob };
+  | { type: "EndpointUpdates"; payload: EndpointUpdatePayload[] }
+  | { type: "scan_complete"; payload: ScanJob }
+  | { type: "ScanComplete"; payload: { scan_id: string; stats: ScanStats } }
+  | { type: "ReportReady"; payload: { endpoint_id: string; report_kind: string; framework: string } };
 
 export type WsStatus = "connecting" | "open" | "closed";
 
@@ -26,9 +41,14 @@ function isWsMessage(value: unknown): value is WsMessage {
   const t = (value as { type?: unknown }).type;
   return (
     t === "scan_progress" ||
+    t === "ScanProgress" ||
     t === "scan_event" ||
+    t === "ScanEvent" ||
     t === "endpoint_update" ||
-    t === "scan_complete"
+    t === "EndpointUpdates" ||
+    t === "scan_complete" ||
+    t === "ScanComplete" ||
+    t === "ReportReady"
   );
 }
 

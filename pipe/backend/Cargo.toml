@@ -1,0 +1,30 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["ws"] }
+chrono = { version = "0.4", features = ["serde"] }
+hex = "0.4"
+pyo3 = { version = "0.22", features = ["auto-initialize"] }
+regex = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+tokio = { version = "1", features = ["full"] }
+toml = "0.8"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+data = { path = "../data" }
+endpoint_store = { path = "../endpoint_store" }
+graph = { path = "../graph" }
+model_loader = { path = "../model_loader" }
+
+[build-dependencies]
+pyo3-build-config = "0.22"

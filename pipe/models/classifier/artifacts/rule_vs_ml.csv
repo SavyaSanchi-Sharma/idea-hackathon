@@ -1,0 +1,385 @@
+endpoint_id,endpoint,method,true_label,rule_predict,ml_predict,rule_reason
+872,/v1/upi/mandate,DELETE,active,orphaned,active,"no owner team + high traffic (5,506 calls/7d) — zombie endpoint"
+212,/v1/transfers/swift,POST,active,active,active,"registered, owned, not deprecated"
+1657,/v1/accounts/{accountId}/balance,PUT,active,active,active,"registered, owned, not deprecated"
+1077,/v1/transfers/neft,POST,active,active,active,"registered, owned, not deprecated"
+1628,/internal/aa/consent,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1185,/v1/upi/pay,DELETE,orphaned,orphaned,orphaned,"no owner team + high traffic (27,007 calls/7d) — zombie endpoint"
+1410,/v1/accounts/{accountId}/transactions,GET,active,active,active,"registered, owned, not deprecated"
+1225,/v1/customers/{customerId}/documents,GET,active,active,active,"registered, owned, not deprecated"
+1574,/internal/loans/apply,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+921,/v1/audit/logs,GET,active,active,active,"registered, owned, not deprecated"
+1564,/internal/customers/{customerId}/preferences,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1687,/internal/beneficiaries,PUT,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+627,/v1/accounts/{accountId}/statement,POST,active,active,active,"registered, owned, not deprecated"
+1500,/v3/accounts/{accountId}/balance,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+216,/v1/upi/mandate,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+117,/v1/kyc/video,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (20,485 calls/7d) — zombie endpoint"
+751,/v1/upi/vpa/verify,GET,active,active,active,"registered, owned, not deprecated"
+347,/v1/transfers/rtgs,POST,active,active,active,"registered, owned, not deprecated"
+1059,/v2/transfers/imps,GET,active,active,orphaned,"registered, owned, not deprecated"
+694,/v1/fd/{depositId}/close,GET,active,active,active,"registered, owned, not deprecated"
+1883,/v1/accounts/{accountId}/balance,GET,orphaned,active,orphaned,"registered, owned, not deprecated"
+1776,/v1/aa/consent,GET,orphaned,orphaned,orphaned,no owner team
+355,/v1/fd/book,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (21,680 calls/7d) — zombie endpoint"
+8,/v1/loans/{loanId}/repayment,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1861,/internal/accounts/{accountId}/balance,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+324,/internal/upi/pay,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1094,/v2/transfers/imps,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (29,945 calls/7d) — zombie endpoint"
+1690,/v1/loans/{loanId}/schedule,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (28,891 calls/7d) — zombie endpoint"
+288,/v2/transfers/imps,POST,active,active,active,"registered, owned, not deprecated"
+662,/v1/customers/{customerId}/profile,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1824,/v1/transfers/swift,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (15,592 calls/7d) — zombie endpoint"
+497,/v1/loans/eligibility,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (3,944 calls/7d) — zombie endpoint"
+845,/v1/loans/{loanId}/schedule,GET,active,active,active,"registered, owned, not deprecated"
+230,/v1/upi/collect,PUT,active,active,active,"registered, owned, not deprecated"
+795,/v1/cards/{cardId}/limit,DELETE,orphaned,active,orphaned,"registered, owned, not deprecated"
+541,/v1/accounts/{accountId}/statement,POST,active,active,active,"registered, owned, not deprecated"
+11,/internal/accounts/{accountId}/balance,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+714,/v1/transfers/neft,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (5,127 calls/7d) — zombie endpoint"
+1072,/v1/upi/mandate,GET,active,active,active,"registered, owned, not deprecated"
+1122,/v2/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1476,/v2/upi/pay,POST,active,active,active,"registered, owned, not deprecated"
+853,/internal/audit/logs,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+447,/v1/beneficiaries/{beneficiaryId},POST,active,active,active,"registered, owned, not deprecated"
+1036,/v1/transfers/rtgs,POST,active,active,active,"registered, owned, not deprecated"
+646,/v1/beneficiaries/{beneficiaryId},GET,orphaned,orphaned,orphaned,no owner team
+57,/v1/cards/{cardId}/freeze,GET,orphaned,active,orphaned,"registered, owned, not deprecated"
+1658,/v1/cards/{cardId}/limit,PUT,active,active,active,"registered, owned, not deprecated"
+1558,/v3/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1523,/v1/beneficiaries,POST,orphaned,orphaned,orphaned,no owner team
+223,/v1/rd/book,GET,active,active,active,"registered, owned, not deprecated"
+567,/v1/rd/book,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1688,/internal/beneficiaries/{beneficiaryId},POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+485,/v1/forex/book,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+480,/v1/loans/{loanId}/schedule,POST,orphaned,orphaned,orphaned,no owner team
+1243,/v1/customers/{customerId}/documents,POST,active,active,active,"registered, owned, not deprecated"
+201,/v1/forex/book,POST,orphaned,active,orphaned,"registered, owned, not deprecated"
+965,/v1/forex/quote,PATCH,deprecated,deprecated,deprecated,deprecated flag set in registry
+297,/v1/customers/{customerId}/preferences,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (7,586 calls/7d) — zombie endpoint"
+1050,/v1/upi/vpa/verify,GET,active,active,active,"registered, owned, not deprecated"
+465,/v1/transfers/neft,POST,active,active,active,"registered, owned, not deprecated"
+55,/v1/upi/mandate,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (24,453 calls/7d) — zombie endpoint"
+1245,/v1/loans/{loanId}/repayment,POST,active,active,active,"registered, owned, not deprecated"
+343,/v1/loans/eligibility,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1579,/v1/beneficiaries,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (10,127 calls/7d) — zombie endpoint"
+1097,/v1/cards/{cardId}/freeze,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (9,155 calls/7d) — zombie endpoint"
+36,/internal/cards/issue,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1626,/v1/cards/issue,POST,active,active,active,"registered, owned, not deprecated"
+1435,/internal/loans/{loanId}/repayment,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1540,/v1/upi/vpa/verify,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+181,/v1/upi/collect,GET,active,active,active,"registered, owned, not deprecated"
+1159,/v1/transfers/neft,GET,active,deprecated,active,deprecated flag set in registry
+1605,/v1/upi/vpa/verify,POST,active,active,active,"registered, owned, not deprecated"
+941,/v1/audit/logs,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (10,063 calls/7d) — zombie endpoint"
+354,/v1/accounts/{accountId}/holds,POST,active,active,active,"registered, owned, not deprecated"
+892,/internal/transfers/neft,PUT,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+580,/internal/kyc/verify,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+205,/internal/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1268,/v1/fd/book,POST,active,active,active,"registered, owned, not deprecated"
+701,/v1/customers/{customerId}/documents,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (18,117 calls/7d) — zombie endpoint"
+16,/v1/accounts/{accountId}/holds,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (23,937 calls/7d) — zombie endpoint"
+1149,/internal/accounts/{accountId}/holds,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+445,/internal/kyc/pan,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+184,/v1/accounts/{accountId}/balance,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (26,631 calls/7d) — zombie endpoint"
+1261,/v1/kyc/verify,POST,orphaned,orphaned,orphaned,no owner team
+1512,/v1/customers/{customerId}/preferences,POST,active,active,active,"registered, owned, not deprecated"
+1271,/v1/cards/{cardId}/limit,GET,orphaned,active,orphaned,"registered, owned, not deprecated"
+312,/v1/audit/logs,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+768,/v1/loans/eligibility,DELETE,active,active,active,"registered, owned, not deprecated"
+925,/v1/notifications/preferences,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (24,148 calls/7d) — zombie endpoint"
+1550,/v3/accounts/{accountId}/balance,POST,active,active,active,"registered, owned, not deprecated"
+40,/v1/audit/logs,POST,active,active,active,"registered, owned, not deprecated"
+930,/v3/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (18,436 calls/7d) — zombie endpoint"
+906,/v3/accounts/{accountId}/balance,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (14,126 calls/7d) — zombie endpoint"
+339,/v1/notifications/preferences,POST,orphaned,orphaned,orphaned,no owner team
+1524,/v1/upi/vpa/verify,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+615,/internal/customers/{customerId}/preferences,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1717,/v1/loans/{loanId}/repayment,POST,active,active,active,"registered, owned, not deprecated"
+332,/internal/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1409,/v1/customers/{customerId}/documents,GET,active,active,active,"registered, owned, not deprecated"
+1255,/internal/customers/{customerId}/documents,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+261,/v2/transfers/imps,POST,orphaned,orphaned,orphaned,no owner team
+544,/v1/transfers/imps,POST,active,active,active,"registered, owned, not deprecated"
+1845,/v1/loans/eligibility,POST,orphaned,orphaned,orphaned,no owner team
+1340,/v1/transfers/rtgs,POST,active,active,active,"registered, owned, not deprecated"
+1203,/v1/loans/{loanId}/schedule,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+32,/v1/forex/book,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+873,/v1/cards/{cardId}/limit,GET,orphaned,orphaned,orphaned,no owner team
+1673,/v2/transfers/imps,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+195,/v1/cards/{cardId}/pin,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (5,058 calls/7d) — zombie endpoint"
+524,/v1/loans/apply,POST,orphaned,orphaned,orphaned,no owner team
+120,/v3/accounts/{accountId}/balance,GET,active,active,active,"registered, owned, not deprecated"
+1113,/v2/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1565,/v1/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+227,/v1/loans/{loanId}/schedule,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (12,746 calls/7d) — zombie endpoint"
+1042,/v1/notifications/preferences,POST,active,active,active,"registered, owned, not deprecated"
+1350,/v1/cards/{cardId}/pin,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+232,/v1/cards/{cardId}/limit,DELETE,active,active,active,"registered, owned, not deprecated"
+385,/v1/beneficiaries/{beneficiaryId},POST,orphaned,orphaned,orphaned,"no owner team + high traffic (27,016 calls/7d) — zombie endpoint"
+539,/v1/loans/eligibility,POST,orphaned,active,orphaned,"registered, owned, not deprecated"
+20,/v1/upi/vpa/verify,POST,orphaned,orphaned,orphaned,no owner team
+1237,/v1/cards/{cardId}/freeze,POST,active,active,active,"registered, owned, not deprecated"
+358,/v1/fd/{depositId}/close,POST,active,active,active,"registered, owned, not deprecated"
+650,/v1/aa/data,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+367,/v1/transfers/neft,POST,active,active,active,"registered, owned, not deprecated"
+793,/v1/aa/data,GET,orphaned,orphaned,orphaned,no owner team
+649,/v1/kyc/aadhaar,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1118,/v1/accounts/{accountId}/transactions,POST,active,active,active,"registered, owned, not deprecated"
+1632,/v1/upi/collect,POST,active,active,active,"registered, owned, not deprecated"
+1286,/internal/transfers/rtgs,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+543,/v1/customers/{customerId}/documents,POST,active,active,active,"registered, owned, not deprecated"
+1188,/v2/cards/{cardId}/freeze,GET,orphaned,orphaned,orphaned,no owner team
+844,/v2/upi/pay,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1257,/v1/beneficiaries/{beneficiaryId},POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1175,/v1/customers/{customerId}/documents,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (26,565 calls/7d) — zombie endpoint"
+545,/v1/loans/apply,POST,active,active,active,"registered, owned, not deprecated"
+1827,/v1/notifications/preferences,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (13,361 calls/7d) — zombie endpoint"
+670,/v1/customers/{customerId}/preferences,GET,active,active,active,"registered, owned, not deprecated"
+1226,/v1/transfers/swift,GET,active,active,active,"registered, owned, not deprecated"
+85,/v1/fd/{depositId}/close,GET,orphaned,orphaned,orphaned,no owner team
+1235,/v1/transfers/imps,GET,active,active,active,"registered, owned, not deprecated"
+883,/v1/customers/{customerId}/documents,PATCH,active,orphaned,active,"no owner team + high traffic (28,293 calls/7d) — zombie endpoint"
+441,/v1/forex/book,POST,active,deprecated,active,deprecated flag set in registry
+882,/internal/transfers/neft,DELETE,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+757,/internal/accounts/{accountId}/balance,PUT,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1796,/v1/beneficiaries/{beneficiaryId},POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+109,/v1/accounts/{accountId}/balance,GET,active,active,active,"registered, owned, not deprecated"
+1044,/v1/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (19,022 calls/7d) — zombie endpoint"
+1834,/v1/loans/{loanId}/repayment,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+865,/v1/loans/{loanId}/schedule,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+115,/v1/cards/issue,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (6,267 calls/7d) — zombie endpoint"
+836,/v1/cards/{cardId}/freeze,PATCH,orphaned,orphaned,orphaned,"no owner team + high traffic (29,502 calls/7d) — zombie endpoint"
+260,/v2/transfers/imps,POST,orphaned,orphaned,orphaned,no owner team
+173,/v1/loans/{loanId}/schedule,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1195,/v1/aa/fip/discover,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+698,/v2/transfers/imps,GET,orphaned,orphaned,orphaned,no owner team
+451,/v1/cards/issue,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (6,218 calls/7d) — zombie endpoint"
+737,/v3/upi/pay,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1483,/v1/loans/apply,DELETE,deprecated,orphaned,deprecated,no owner team
+110,/v1/kyc/pan,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (28,319 calls/7d) — zombie endpoint"
+1106,/v2/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1291,/v1/loans/apply,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (12,656 calls/7d) — zombie endpoint"
+1839,/v1/beneficiaries,GET,active,active,active,"registered, owned, not deprecated"
+207,/v1/kyc/video,POST,active,active,active,"registered, owned, not deprecated"
+1204,/v1/loans/{loanId}/schedule,GET,active,active,active,"registered, owned, not deprecated"
+1510,/v1/aa/fip/discover,POST,active,active,active,"registered, owned, not deprecated"
+1484,/v3/upi/pay,GET,orphaned,orphaned,orphaned,no owner team
+744,/v1/aa/consent,DELETE,deprecated,deprecated,deprecated,deprecated flag set in registry
+1539,/v1/rd/book,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+982,/v1/upi/vpa/verify,GET,orphaned,orphaned,orphaned,no owner team
+1034,/v1/fd/{depositId}/close,DELETE,active,active,active,"registered, owned, not deprecated"
+1338,/v1/cards/{cardId}/freeze,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+678,/v2/upi/pay,GET,orphaned,orphaned,orphaned,no owner team
+189,/v1/loans/apply,POST,active,active,active,"registered, owned, not deprecated"
+1635,/v1/customers/{customerId}/documents,PUT,active,active,active,"registered, owned, not deprecated"
+231,/internal/transfers/neft,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+352,/v2/cards/{cardId}/freeze,POST,orphaned,orphaned,orphaned,no owner team
+1775,/v1/accounts/{accountId}/holds,GET,active,active,active,"registered, owned, not deprecated"
+1316,/v1/upi/collect,GET,orphaned,orphaned,orphaned,no owner team
+1899,/v1/transfers/rtgs,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (4,639 calls/7d) — zombie endpoint"
+329,/v1/kyc/pan,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1074,/internal/notifications/preferences,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1902,/v1/fd/book,POST,active,active,active,"registered, owned, not deprecated"
+89,/v1/transfers/imps,GET,active,active,active,"registered, owned, not deprecated"
+562,/v1/accounts/{accountId}/holds,POST,active,active,active,"registered, owned, not deprecated"
+306,/v1/fd/book,POST,active,active,active,"registered, owned, not deprecated"
+889,/v1/cards/{cardId}/limit,POST,active,active,active,"registered, owned, not deprecated"
+1259,/v2/accounts/{accountId}/balance,POST,active,active,active,"registered, owned, not deprecated"
+914,/v1/transfers/imps,GET,active,active,active,"registered, owned, not deprecated"
+171,/v1/loans/eligibility,GET,active,active,active,"registered, owned, not deprecated"
+78,/v1/customers/{customerId}/preferences,POST,active,active,active,"registered, owned, not deprecated"
+1418,/v1/forex/quote,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1853,/v2/accounts/{accountId}/balance,PATCH,orphaned,orphaned,orphaned,"no owner team + high traffic (22,711 calls/7d) — zombie endpoint"
+933,/v1/transfers/imps,POST,active,active,active,"registered, owned, not deprecated"
+17,/v2/upi/pay,POST,orphaned,orphaned,orphaned,no owner team
+1132,/v1/cards/{cardId}/freeze,POST,active,active,active,"registered, owned, not deprecated"
+1557,/v1/cards/{cardId}/pin,POST,active,active,active,"registered, owned, not deprecated"
+127,/v2/transfers/imps,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (25,310 calls/7d) — zombie endpoint"
+1516,/v1/forex/book,POST,active,active,active,"registered, owned, not deprecated"
+61,/v1/transfers/neft,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (20,404 calls/7d) — zombie endpoint"
+272,/v1/forex/quote,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+266,/v1/aa/consent,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1577,/v1/transfers/neft,GET,active,active,active,"registered, owned, not deprecated"
+1196,/v1/customers/{customerId}/documents,POST,active,active,active,"registered, owned, not deprecated"
+979,/v2/cards/{cardId}/freeze,GET,active,active,active,"registered, owned, not deprecated"
+1219,/v1/accounts/{accountId}/balance,GET,active,active,active,"registered, owned, not deprecated"
+1643,/v1/cards/{cardId}/pin,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1800,/v1/beneficiaries,POST,active,active,active,"registered, owned, not deprecated"
+1319,/v1/fd/book,POST,orphaned,orphaned,orphaned,no owner team
+1043,/v1/aa/fip/discover,GET,active,active,active,"registered, owned, not deprecated"
+512,/v1/loans/eligibility,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (17,987 calls/7d) — zombie endpoint"
+158,/v1/customers/{customerId}/preferences,GET,active,active,active,"registered, owned, not deprecated"
+1076,/v1/loans/{loanId}/schedule,GET,active,active,active,"registered, owned, not deprecated"
+1407,/v1/beneficiaries,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (20,265 calls/7d) — zombie endpoint"
+626,/v3/upi/pay,GET,orphaned,orphaned,orphaned,no owner team
+143,/v1/notifications/preferences,GET,active,active,active,"registered, owned, not deprecated"
+292,/v3/accounts/{accountId}/balance,POST,active,active,active,"registered, owned, not deprecated"
+725,/v1/loans/eligibility,GET,orphaned,orphaned,orphaned,no owner team
+971,/v1/loans/eligibility,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1352,/v1/cards/{cardId}/pin,DELETE,orphaned,orphaned,orphaned,no owner team
+839,/v1/accounts/{accountId}/holds,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+931,/v1/forex/quote,POST,orphaned,orphaned,orphaned,no owner team
+855,/v1/aa/consent,GET,active,active,active,"registered, owned, not deprecated"
+997,/v1/upi/mandate,GET,active,active,active,"registered, owned, not deprecated"
+77,/v1/loans/{loanId}/repayment,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (29,395 calls/7d) — zombie endpoint"
+896,/v2/cards/{cardId}/freeze,GET,active,active,active,"registered, owned, not deprecated"
+770,/v1/transfers/swift,GET,active,active,active,"registered, owned, not deprecated"
+1545,/v1/customers/{customerId}/preferences,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+613,/v1/notifications/preferences,GET,active,active,active,"registered, owned, not deprecated"
+699,/v1/aa/data,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (6,582 calls/7d) — zombie endpoint"
+767,/internal/audit/logs,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1100,/v1/upi/mandate,GET,active,active,active,"registered, owned, not deprecated"
+1231,/v1/cards/{cardId}/limit,POST,active,active,active,"registered, owned, not deprecated"
+1515,/v1/kyc/pan,POST,active,active,active,"registered, owned, not deprecated"
+4,/v1/kyc/pan,POST,active,active,active,"registered, owned, not deprecated"
+427,/v1/loans/{loanId}/repayment,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1875,/internal/loans/{loanId}/repayment,DELETE,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1397,/internal/cards/{cardId}/pin,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+948,/v1/loans/{loanId}/schedule,POST,active,active,active,"registered, owned, not deprecated"
+1511,/v1/notifications/preferences,POST,active,active,active,"registered, owned, not deprecated"
+64,/v1/customers/{customerId}/documents,GET,active,active,active,"registered, owned, not deprecated"
+1127,/v1/transfers/rtgs,POST,active,active,active,"registered, owned, not deprecated"
+1837,/v2/cards/{cardId}/freeze,GET,orphaned,orphaned,orphaned,no owner team
+365,/v1/upi/collect,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (8,209 calls/7d) — zombie endpoint"
+1471,/v1/upi/collect,GET,active,active,active,"registered, owned, not deprecated"
+1104,/v3/accounts/{accountId}/balance,GET,active,active,active,"registered, owned, not deprecated"
+786,/v2/cards/{cardId}/freeze,POST,active,active,active,"registered, owned, not deprecated"
+1871,/v2/cards/{cardId}/freeze,POST,active,active,active,"registered, owned, not deprecated"
+618,/v1/aa/fip/discover,GET,active,active,active,"registered, owned, not deprecated"
+1344,/v1/transfers/neft,GET,active,active,active,"registered, owned, not deprecated"
+100,/v1/cards/{cardId}/limit,GET,active,active,active,"registered, owned, not deprecated"
+1480,/v1/upi/mandate,POST,active,orphaned,active,"no owner team + high traffic (14,776 calls/7d) — zombie endpoint"
+1514,/v1/cards/{cardId}/freeze,POST,orphaned,orphaned,orphaned,no owner team
+350,/v1/loans/{loanId}/repayment,POST,active,active,active,"registered, owned, not deprecated"
+520,/v1/transfers/imps,POST,active,active,active,"registered, owned, not deprecated"
+611,/v1/loans/{loanId}/repayment,POST,active,active,active,"registered, owned, not deprecated"
+1911,/v2/cards/{cardId}/freeze,DELETE,active,active,active,"registered, owned, not deprecated"
+1850,/v1/kyc/video,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+274,/internal/notifications/preferences,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1648,/v1/cards/{cardId}/pin,PUT,active,active,active,"registered, owned, not deprecated"
+1721,/v1/loans/eligibility,POST,active,active,active,"registered, owned, not deprecated"
+535,/v3/upi/pay,POST,orphaned,orphaned,orphaned,no owner team
+1542,/v1/fd/{depositId}/close,POST,active,active,active,"registered, owned, not deprecated"
+1678,/v1/cards/{cardId}/limit,POST,active,active,active,"registered, owned, not deprecated"
+38,/v1/loans/{loanId}/schedule,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (21,128 calls/7d) — zombie endpoint"
+1234,/v2/cards/{cardId}/freeze,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (7,058 calls/7d) — zombie endpoint"
+1490,/internal/kyc/verify,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1645,/internal/forex/book,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1311,/v1/loans/apply,POST,active,active,active,"registered, owned, not deprecated"
+377,/v1/fd/book,POST,active,active,active,"registered, owned, not deprecated"
+638,/internal/loans/{loanId}/schedule,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+314,/v1/loans/{loanId}/schedule,POST,active,active,active,"registered, owned, not deprecated"
+549,/v1/upi/mandate,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+275,/v1/accounts/{accountId}/statement,POST,orphaned,orphaned,orphaned,no owner team
+1029,/internal/customers/{customerId}/preferences,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+392,/v1/customers/{customerId}/preferences,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (13,724 calls/7d) — zombie endpoint"
+778,/v1/rd/book,PATCH,orphaned,orphaned,orphaned,"no owner team + high traffic (14,056 calls/7d) — zombie endpoint"
+295,/internal/cards/{cardId}/limit,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1843,/v1/accounts/{accountId}/balance,POST,active,active,active,"registered, owned, not deprecated"
+1644,/v1/cards/{cardId}/pin,POST,active,active,active,"registered, owned, not deprecated"
+1432,/v1/aa/consent,POST,active,active,active,"registered, owned, not deprecated"
+706,/v1/aa/fip/discover,GET,active,active,active,"registered, owned, not deprecated"
+870,/v1/audit/logs,GET,active,active,active,"registered, owned, not deprecated"
+1055,/v1/accounts/{accountId}/transactions,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (10,357 calls/7d) — zombie endpoint"
+91,/v1/beneficiaries/{beneficiaryId},GET,active,active,active,"registered, owned, not deprecated"
+489,/v1/accounts/{accountId}/statement,POST,active,active,active,"registered, owned, not deprecated"
+1402,/v1/accounts/{accountId}/balance,POST,active,active,active,"registered, owned, not deprecated"
+208,/v1/customers/{customerId}/documents,POST,orphaned,orphaned,deprecated,no owner team
+1667,/v1/cards/{cardId}/limit,PUT,deprecated,deprecated,deprecated,deprecated flag set in registry
+13,/v1/fd/book,GET,active,active,active,"registered, owned, not deprecated"
+1756,/v1/upi/pay,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (14,488 calls/7d) — zombie endpoint"
+1239,/v1/cards/issue,GET,orphaned,deprecated,orphaned,deprecated flag set in registry
+174,/internal/kyc/video,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+893,/v1/fd/{depositId}/close,GET,orphaned,orphaned,orphaned,no owner team
+1262,/v1/cards/{cardId}/limit,GET,active,active,active,"registered, owned, not deprecated"
+63,/v1/upi/pay,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (11,493 calls/7d) — zombie endpoint"
+1646,/v3/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1750,/v2/transfers/imps,PUT,deprecated,deprecated,deprecated,deprecated flag set in registry
+974,/v1/fd/book,GET,orphaned,deprecated,orphaned,deprecated flag set in registry
+651,/v1/aa/fip/discover,POST,active,active,active,"registered, owned, not deprecated"
+583,/v1/cards/{cardId}/freeze,PATCH,deprecated,deprecated,deprecated,deprecated flag set in registry
+739,/v1/accounts/{accountId}/transactions,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+710,/v1/kyc/aadhaar,GET,active,active,active,"registered, owned, not deprecated"
+898,/v1/upi/vpa/verify,DELETE,active,active,active,"registered, owned, not deprecated"
+1459,/v1/upi/collect,GET,active,active,active,"registered, owned, not deprecated"
+885,/v1/notifications/preferences,GET,active,active,active,"registered, owned, not deprecated"
+1621,/v1/upi/mandate,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1653,/v1/cards/{cardId}/freeze,PUT,orphaned,orphaned,orphaned,no owner team
+749,/v1/customers/{customerId}/documents,DELETE,orphaned,orphaned,orphaned,"no owner team + high traffic (13,728 calls/7d) — zombie endpoint"
+197,/v3/upi/pay,POST,active,active,active,"registered, owned, not deprecated"
+461,/v1/aa/data,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (26,355 calls/7d) — zombie endpoint"
+1420,/v2/upi/pay,POST,active,active,active,"registered, owned, not deprecated"
+399,/v1/cards/{cardId}/pin,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (22,395 calls/7d) — zombie endpoint"
+1838,/v1/loans/eligibility,DELETE,active,active,active,"registered, owned, not deprecated"
+1914,/v1/forex/book,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1434,/v2/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1604,/v1/kyc/aadhaar,POST,active,active,active,"registered, owned, not deprecated"
+147,/v2/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1815,/v2/upi/pay,POST,active,active,active,"registered, owned, not deprecated"
+1803,/v1/customers/{customerId}/preferences,POST,active,active,active,"registered, owned, not deprecated"
+560,/v1/transfers/neft,POST,active,active,active,"registered, owned, not deprecated"
+1065,/v1/customers/{customerId}/documents,GET,active,active,active,"registered, owned, not deprecated"
+87,/v1/loans/{loanId}/repayment,GET,active,active,active,"registered, owned, not deprecated"
+704,/v1/notifications/preferences,GET,orphaned,orphaned,orphaned,no owner team
+59,/v1/kyc/video,POST,active,active,active,"registered, owned, not deprecated"
+116,/internal/transfers/imps,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1640,/v1/kyc/verify,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (18,000 calls/7d) — zombie endpoint"
+414,/v1/audit/logs,POST,active,active,active,"registered, owned, not deprecated"
+1683,/v1/cards/{cardId}/freeze,PUT,active,active,active,"registered, owned, not deprecated"
+406,/v1/loans/{loanId}/repayment,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (7,283 calls/7d) — zombie endpoint"
+1329,/v1/cards/issue,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (17,312 calls/7d) — zombie endpoint"
+1508,/internal/kyc/video,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1047,/v1/aa/consent,GET,active,orphaned,active,"no owner team + high traffic (18,924 calls/7d) — zombie endpoint"
+464,/v2/accounts/{accountId}/balance,POST,active,active,active,"registered, owned, not deprecated"
+861,/v1/customers/{customerId}/preferences,PUT,deprecated,deprecated,deprecated,deprecated flag set in registry
+37,/internal/accounts/{accountId}/holds,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+426,/internal/upi/vpa/verify,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+213,/v1/loans/{loanId}/schedule,POST,active,active,active,"registered, owned, not deprecated"
+1141,/v1/loans/eligibility,POST,orphaned,orphaned,orphaned,no owner team
+1092,/v1/upi/mandate,POST,active,active,active,"registered, owned, not deprecated"
+764,/v1/aa/fip/discover,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1878,/v2/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+1135,/v1/upi/mandate,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+1666,/v1/aa/data,PUT,active,active,active,"registered, owned, not deprecated"
+1583,/v1/transfers/neft,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
+137,/v1/aa/data,GET,active,active,active,"registered, owned, not deprecated"
+960,/internal/aa/data,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1624,/v1/beneficiaries,POST,active,active,active,"registered, owned, not deprecated"
+1554,/v1/upi/mandate,GET,active,active,active,"registered, owned, not deprecated"
+1671,/v1/beneficiaries/{beneficiaryId},PUT,active,active,active,"registered, owned, not deprecated"
+267,/v1/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,no owner team
+1152,/v1/loans/apply,DELETE,active,active,active,"registered, owned, not deprecated"
+41,/v1/upi/mandate,POST,active,active,active,"registered, owned, not deprecated"
+417,/v1/cards/{cardId}/pin,POST,active,active,active,"registered, owned, not deprecated"
+491,/v1/kyc/pan,POST,active,active,active,"registered, owned, not deprecated"
+1134,/v1/fd/book,GET,orphaned,orphaned,orphaned,"no owner team + high traffic (5,601 calls/7d) — zombie endpoint"
+1241,/v1/accounts/{accountId}/statement,DELETE,active,active,active,"registered, owned, not deprecated"
+568,/v1/kyc/verify,POST,orphaned,orphaned,orphaned,no owner team
+1556,/internal/upi/pay,GET,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1240,/v1/customers/{customerId}/documents,POST,active,active,active,"registered, owned, not deprecated"
+1863,/v3/upi/pay,GET,active,active,active,"registered, owned, not deprecated"
+533,/v1/cards/{cardId}/pin,POST,orphaned,orphaned,orphaned,"no owner team + high traffic (3,288 calls/7d) — zombie endpoint"
+503,/v1/aa/consent,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1297,/v1/fd/{depositId}/close,GET,active,active,active,"registered, owned, not deprecated"
+691,/v1/transfers/rtgs,POST,orphaned,orphaned,orphaned,no owner team
+983,/v2/transfers/imps,PUT,deprecated,deprecated,deprecated,deprecated flag set in registry
+1589,/v1/forex/book,GET,active,active,active,"registered, owned, not deprecated"
+428,/v1/accounts/{accountId}/transactions,POST,active,active,active,"registered, owned, not deprecated"
+483,/v1/upi/mandate,POST,active,active,active,"registered, owned, not deprecated"
+1315,/v1/loans/eligibility,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+1778,/v1/cards/{cardId}/freeze,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+255,/internal/transfers/rtgs,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1748,/v1/beneficiaries/{beneficiaryId},POST,active,active,active,"registered, owned, not deprecated"
+360,/v3/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,no owner team
+685,/v1/beneficiaries,POST,orphaned,orphaned,orphaned,no owner team
+956,/v1/notifications/preferences,POST,active,active,active,"registered, owned, not deprecated"
+1172,/v2/cards/{cardId}/freeze,DELETE,orphaned,orphaned,orphaned,no owner team
+277,/v1/aa/data,POST,active,active,active,"registered, owned, not deprecated"
+241,/v1/rd/book,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+435,/internal/accounts/{accountId}/balance,POST,orphaned,orphaned,orphaned,not in API registry (shadow endpoint)
+1486,/v1/accounts/{accountId}/transactions,POST,active,active,active,"registered, owned, not deprecated"
+791,/v1/kyc/aadhaar,DELETE,active,orphaned,active,"no owner team + high traffic (20,346 calls/7d) — zombie endpoint"
+466,/v1/upi/pay,POST,deprecated,deprecated,deprecated,deprecated flag set in registry
+574,/v1/fd/book,GET,orphaned,orphaned,orphaned,no owner team
+1631,/v1/forex/book,GET,deprecated,deprecated,deprecated,deprecated flag set in registry
