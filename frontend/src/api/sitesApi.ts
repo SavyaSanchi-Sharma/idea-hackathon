@@ -6,7 +6,7 @@
  * own socket so opening/closing one detail page doesn't disturb others.
  */
 import type { Endpoint, ServiceLane } from "@/types/models";
-import { apiRequest } from "./client";
+import { aiEngineRequest } from "./client";
 
 // ─── shapes ────────────────────────────────────────────────────────────────
 
@@ -121,36 +121,36 @@ export interface ChatHealthResponse {
 
 // ─── REST ──────────────────────────────────────────────────────────────────
 
-export const listSites = () => apiRequest<SiteListResponse>("/api/sites");
+export const listSites = () => aiEngineRequest<SiteListResponse>("/api/sites");
 
 export const getSite = (id: string) =>
-  apiRequest<Site>(`/api/sites/${encodeURIComponent(id)}`);
+  aiEngineRequest<Site>(`/api/sites/${encodeURIComponent(id)}`);
 
 export const createSite = (body: SiteCreatePayload) =>
-  apiRequest<Site>("/api/sites", { method: "POST", body });
+  aiEngineRequest<Site>("/api/sites", { method: "POST", body });
 
 export const deleteSite = (id: string) =>
-  apiRequest<{ ok: true; id: string }>(`/api/sites/${encodeURIComponent(id)}`, {
+  aiEngineRequest<{ ok: true; id: string }>(`/api/sites/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
 
 export const listSiteEndpoints = (id: string) =>
-  apiRequest<SiteEndpointsResponse>(`/api/sites/${encodeURIComponent(id)}/endpoints`);
+  aiEngineRequest<SiteEndpointsResponse>(`/api/sites/${encodeURIComponent(id)}/endpoints`);
 
 export const getSiteLogs = (id: string, limit = 200) =>
-  apiRequest<SiteLogsResponse>(
+  aiEngineRequest<SiteLogsResponse>(
     `/api/sites/${encodeURIComponent(id)}/logs`,
     { query: { limit } },
   );
 
 export const postChat = (id: string, body: ChatRequestBody) =>
-  apiRequest<ChatResponse>(
+  aiEngineRequest<ChatResponse>(
     `/api/sites/${encodeURIComponent(id)}/chat`,
     { method: "POST", body },
   );
 
 export const getChatHealth = (id: string) =>
-  apiRequest<ChatHealthResponse>(`/api/sites/${encodeURIComponent(id)}/chat/health`);
+  aiEngineRequest<ChatHealthResponse>(`/api/sites/${encodeURIComponent(id)}/chat/health`);
 
 // ─── per-site WebSocket ────────────────────────────────────────────────────
 
@@ -180,7 +180,7 @@ export interface SiteWsHandle {
   close(): void;
 }
 
-const HTTP_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const AI_ENGINE_BASE = import.meta.env.VITE_AI_ENGINE_BASE_URL ?? "http://localhost:8001";
 const BACKOFF_BASE_MS = 800;
 const BACKOFF_MAX_MS = 8_000;
 
@@ -189,13 +189,13 @@ function siteWsUrl(siteId: string): string {
   if (typeof explicit === "string" && explicit.length > 0) {
     return `${explicit.replace(/\/+$/, "")}/ws/sites/${encodeURIComponent(siteId)}`;
   }
-  // Derive ws:// (or wss://) from HTTP_BASE so prod deploys behind TLS just work.
+  // Derive ws:// (or wss://) from AI_ENGINE_BASE so prod deploys behind TLS just work.
   try {
-    const u = new URL(HTTP_BASE);
+    const u = new URL(AI_ENGINE_BASE);
     const proto = u.protocol === "https:" ? "wss:" : "ws:";
     return `${proto}//${u.host}/ws/sites/${encodeURIComponent(siteId)}`;
   } catch {
-    return `ws://localhost:8000/ws/sites/${encodeURIComponent(siteId)}`;
+    return `ws://localhost:8001/ws/sites/${encodeURIComponent(siteId)}`;
   }
 }
 

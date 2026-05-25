@@ -256,7 +256,8 @@ function BoringLogPanel({
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [autoFollow, setAutoFollow] = useState(true);
-  const [showParsed, setShowParsed] = useState(false);
+  // Default to parsed view — raw JSON is unreadable at this width.
+  const [showParsed, setShowParsed] = useState(true);
 
   // Stick to bottom while autoFollow is on AND user hasn't scrolled up.
   useEffect(() => {
@@ -450,7 +451,9 @@ function InterrogatePanel({
   });
 
   const mutation = useMutation({
-    mutationFn: (q: string) => postChat(siteId, { q, max_lines: 120 }),
+    // Keep the per-request payload small: Groq free tier has tight per-org
+    // token limits and the 8B llama context is 8k. 60 lines + question fits.
+    mutationFn: (q: string) => postChat(siteId, { q, max_lines: 60 }),
   });
 
   useEffect(() => {
@@ -677,6 +680,10 @@ function CitationChip({
   );
 }
 
+// Cap inline citation chips per group. Anything beyond this folds into a
+// silent "+N" marker so a chatty LLM doesn't paper the answer with buttons.
+const MAX_INLINE_CITATIONS = 3;
+
 function renderCitedAnswer(
   text: string,
   snapshot: ChatResponse["log_snapshot"],
@@ -690,9 +697,11 @@ function renderCitedAnswer(
     const start = m.index ?? 0;
     if (start > cursor) out.push(text.slice(cursor, start));
     const indices = expandCitations(m[1] ?? "");
+    const shown = indices.slice(0, MAX_INLINE_CITATIONS);
+    const overflow = indices.length - shown.length;
     out.push(
       <span key={`cite-${i}`} className="inline-flex items-baseline gap-[3px] mx-[2px]">
-        {indices.map((idx) => (
+        {shown.map((idx) => (
           <button
             key={idx}
             type="button"
@@ -711,6 +720,14 @@ function renderCitedAnswer(
             L{idx}
           </button>
         ))}
+        {overflow > 0 ? (
+          <span
+            className="font-mono text-[10px] text-sediment-strong px-[3px]"
+            title={`+${overflow} more citation${overflow === 1 ? "" : "s"} in this group`}
+          >
+            +{overflow}
+          </span>
+        ) : null}
       </span>,
     );
     cursor = start + m[0].length;

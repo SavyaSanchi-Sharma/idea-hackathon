@@ -30,7 +30,178 @@ pub fn router() -> Router<AppState> {
         .route("/api/scan/:id", get(scan_get))
         .route("/api/scan/:id/events", get(scan_events))
         .route("/api/_dev/seed", post(dev_seed))
+        .route("/api/_dev/seed_many", post(dev_seed_many))
         .route("/ws", get(ws_upgrade))
+}
+
+// ─── bulk synthetic seed ──────────────────────────────────────────────────
+//
+// Generates N varied endpoints across a realistic banking surface so the UI
+// has enough data to look populated. Deterministic on N (same N produces the
+// same set). Each generated endpoint emits Registry + Code + Traffic events,
+// matching the single-shot `dev_seed` pattern. The classifier rules decide
+// active vs deprecated vs orphaned vs zombie/shadow from the inputs.
+
+#[derive(Debug, Deserialize)]
+pub struct SeedManyQuery {
+    pub n: Option<usize>,
+}
+
+async fn dev_seed_many(
+    State(s): State<AppState>,
+    Query(q): Query<SeedManyQuery>,
+) -> Result<Json<serde_json::Value>, BackendError> {
+    use chrono::Duration;
+    use data::{Code, Event, Registry, Src, Tagged, Traffic};
+    use uuid::Uuid;
+
+    let n = q.n.unwrap_or(50).clamp(1, 500);
+    let now = Utc::now();
+
+    // Pools — kept small and named so generated paths look like a real bank.
+    let services = [
+        "payments", "customer-service", "auth", "kyc", "cards",
+        "deposits", "loans", "fx", "treasury", "aml",
+    ];
+    let path_templates: [(&str, &str); 14] = [
+        ("POST", "/v2/upi/collect"),
+        ("POST", "/v1/upi/vpa"),
+        ("GET",  "/v1/accounts/{id}/balance"),
+        ("GET",  "/v1/accounts/{id}/statements"),
+        ("POST", "/v1/orders"),
+        ("PUT",  "/v1/orders/{id}"),
+        ("POST", "/v1/cards/issue"),
+        ("GET",  "/v1/cards/list"),
+        ("POST", "/v1/kyc/aadhaar/{id}"),
+        ("POST", "/v1/transfers"),
+        ("GET",  "/v1/fx/quote"),
+        ("POST", "/internal/legacy/customer-search"),
+        ("POST", "/legacy/balance"),
+        ("DELETE", "/v1/users/{id}"),
+    ];
+    let auth_schemes = ["oauth2", "apikey", "basic", "none", "mtls"];
+    let runtimes: [(&str, &str); 8] = [
+        ("python", "3.11"), ("python", "3.7"),
+        ("springboot", "2.7"), ("springboot", "1.5"),
+        ("nodejs", "18"), ("nodejs", "10"),
+        ("golang", "1.21"), ("dotnet", "6"),
+    ];
+    let owners = [
+        Some("Payments"), Some("Customer"), Some("KYC"), Some("Cards"),
+        Some("Treasury"), Some("AML"), None, None,  // ~25% no owner
+    ];
+
+    let mut events: Vec<Tagged> = Vec::with_capacity(n * 3);
+
+    for i in 0..n {
+        // Deterministic pseudo-random index from `i` for each pool.
+        let mix = |salt: usize| (i.wrapping_mul(2654435761).wrapping_add(salt)) & 0x7fff_ffff;
+        let svc = services[mix(1) as usize % services.len()];
+        let (method, base_path) = path_templates[mix(2) as usize % path_templates.len()];
+        let auth = auth_schemes[mix(3) as usize % auth_schemes.len()];
+        let (runtime, runtime_version) = runtimes[mix(4) as usize % runtimes.len()];
+        let owner = owners[mix(5) as usize % owners.len()];
+
+        // ~25% deprecated, ~70% recent commit, ~30% stale (180-900 days).
+        let deprecated = mix(6) % 4 == 0;
+        let stale = mix(7) % 10 < 3;
+        let commit_age_days = if stale {
+            180 + (mix(8) as i64 % 720)
+        } else {
+            mix(9) as i64 % 30
+        };
+        let last_commit = now - Duration::days(commit_age_days);
+
+        // Make each generated path unique so endpoint_id doesn't collide.
+        let path = format!("{}/g{}", base_path.trim_end_matches('/'), i);
+
+        // ~10% shadow: not in registry but has code + traffic.
+        let in_registry = mix(10) % 10 != 0;
+
+        // Status: 200 mostly, sprinkle in 401/403 for none-auth, 500 occasionally.
+        let status_code = match (auth, mix(11) % 20) {
+            ("none", r) if r < 6 => 401,
+            (_,      r) if r == 0 => 500,
+            _ => 200,
+        };
+        let latency_ms = 40 + (mix(12) as u32 % 500);
+
+        if in_registry {
+            events.push(Tagged {
+                event_source: Src::SynRegistry,
+                event: Event::Registry(Registry {
+                    timestamp: now,
+                    change_type: "added".into(),
+                    endpoint_path: path.clone(),
+                    method: method.into(),
+                    version: Some(if path.starts_with("/v2") { "v2".into() } else { "v1".into() }),
+                    service: svc.into(),
+                    owner_team: owner.map(|o| o.into()),
+                    auth_required: auth.into(),
+                    deprecated_flag: deprecated,
+                    sunset_date: None,
+                    last_modified: last_commit,
+                }),
+            });
+        }
+
+        events.push(Tagged {
+            event_source: Src::SynCode,
+            event: Event::Code(Code {
+                timestamp: now,
+                repo_name: format!("{}-svc", svc),
+                commit_sha: format!("{:016x}{:016x}", mix(13), mix(14)),
+                endpoint_path: path.clone(),
+                method: method.into(),
+                service: svc.into(),
+                file_path: format!("src/{}/handlers_{}.{}", svc, i, ext_of(runtime)),
+                last_commit_date: last_commit,
+                last_author: format!("dev{}", mix(15) % 12),
+                runtime: runtime.into(),
+                runtime_version: runtime_version.into(),
+            }),
+        });
+
+        events.push(Tagged {
+            event_source: Src::SynTraffic,
+            event: Event::Traffic(Traffic {
+                timestamp: now,
+                request_id: Uuid::new_v4(),
+                method: method.into(),
+                path: path.clone(),
+                status_code,
+                latency_ms,
+                client_id: if path.contains("/internal/") || path.contains("/legacy/") {
+                    "internal-bot".into()
+                } else {
+                    "mobile".into()
+                },
+                auth_scheme: auth.into(),
+                upstream_service: svc.into(),
+                bytes_in: 128 + (mix(16) as u64 % 2048),
+                bytes_out: 256 + (mix(17) as u64 % 8192),
+            }),
+        });
+    }
+
+    let total_events = events.len();
+    crate::process_batch::run(&s, events).await;
+
+    Ok(Json(json!({
+        "requested": n,
+        "events_emitted": total_events,
+    })))
+}
+
+fn ext_of(runtime: &str) -> &'static str {
+    match runtime {
+        "python" => "py",
+        "springboot" => "java",
+        "nodejs" => "ts",
+        "golang" => "go",
+        "dotnet" => "cs",
+        _ => "txt",
+    }
 }
 
 async fn dev_seed(State(s): State<AppState>) -> Result<Json<serde_json::Value>, BackendError> {

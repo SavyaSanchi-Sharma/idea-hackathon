@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const PIPE_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const AI_ENGINE_BASE_URL = import.meta.env.VITE_AI_ENGINE_BASE_URL ?? "http://localhost:8001";
 
 export class ApiError extends Error {
   status: number;
@@ -17,8 +18,8 @@ interface RequestOptions {
   signal?: AbortSignal;
 }
 
-function buildUrl(path: string, query?: RequestOptions["query"]): string {
-  const url = new URL(path, BASE_URL);
+function buildUrl(base: string, path: string, query?: RequestOptions["query"]): string {
+  const url = new URL(path, base);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v === undefined || v === null || v === "") continue;
@@ -28,8 +29,8 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
   return url.toString();
 }
 
-export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const url = buildUrl(path, opts.query);
+async function _request<T>(base: string, path: string, opts: RequestOptions = {}): Promise<T> {
+  const url = buildUrl(base, path, opts.query);
   const res = await fetch(url, {
     method: opts.method ?? "GET",
     headers: {
@@ -52,6 +53,15 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   return (await res.json()) as T;
 }
 
+export const apiRequest = <T>(path: string, opts: RequestOptions = {}) =>
+  _request<T>(PIPE_BASE_URL, path, opts);
+
+export const aiEngineRequest = <T>(path: string, opts: RequestOptions = {}) =>
+  _request<T>(AI_ENGINE_BASE_URL, path, opts);
+
 export const apiConfig = {
-  baseUrl: BASE_URL,
+  pipeBaseUrl: PIPE_BASE_URL,
+  aiEngineBaseUrl: AI_ENGINE_BASE_URL,
+  // Kept for back-compat with anything that read this field.
+  baseUrl: PIPE_BASE_URL,
 };

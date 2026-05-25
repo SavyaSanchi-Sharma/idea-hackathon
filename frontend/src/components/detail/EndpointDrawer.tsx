@@ -40,7 +40,7 @@ export function EndpointDrawer() {
   const setGraphMode = useUiStore((s) => s.setGraphMode);
   const navigate = useNavigate();
 
-  const { data: ep, isLoading } = useEndpointDetail(selectedId);
+  const { data: ep, isLoading, error } = useEndpointDetail(selectedId);
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
@@ -77,7 +77,9 @@ export function EndpointDrawer() {
         <>
           <motion.div
             key="scrim"
-            className="fixed inset-0 z-overlay"
+            // z-[35] sits between topbar (20) and drawer (40) so the scrim dims
+            // the page behind the drawer without dimming the drawer itself.
+            className="fixed inset-0 z-[35]"
             style={{ background: "rgba(7, 9, 11, 0.7)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -97,8 +99,15 @@ export function EndpointDrawer() {
             aria-modal="true"
             aria-labelledby="drawer-title"
           >
-            {isLoading || !ep ? (
+            {isLoading ? (
               <LoadingShell onClose={closeDrawer} closeRef={closeBtnRef} />
+            ) : error || !ep ? (
+              <ErrorShell
+                onClose={closeDrawer}
+                closeRef={closeBtnRef}
+                endpointId={selectedId}
+                error={error}
+              />
             ) : (
               <DrawerBody
                 endpoint={ep}
@@ -131,6 +140,47 @@ function LoadingShell({
         <div className="h-[160px] w-full skeleton-pulse" aria-hidden />
         <div className="h-[120px] w-full skeleton-pulse" aria-hidden />
         <div className="h-[200px] w-full skeleton-pulse" aria-hidden />
+      </div>
+    </div>
+  );
+}
+
+function ErrorShell({
+  onClose,
+  closeRef,
+  endpointId,
+  error,
+}: {
+  onClose: () => void;
+  closeRef: React.RefObject<HTMLButtonElement>;
+  endpointId: string | null;
+  error: unknown;
+}) {
+  const message =
+    error instanceof Error ? error.message : "no detail returned (likely 404 from the backend)";
+  return (
+    <div className="flex h-full flex-col">
+      <header className="flex items-center justify-between px-[24px] py-[16px] border-b border-hairline">
+        <span className="font-mono text-[11px] text-critical lowercase">specimen unreadable</span>
+        <CloseButton ref={closeRef} onClose={onClose} />
+      </header>
+      <div className="px-[24px] py-[16px] flex flex-col gap-[10px]">
+        <p className="font-mono text-[13px] text-bone lowercase">
+          could not retrieve detail for this endpoint.
+        </p>
+        {endpointId ? (
+          <p className="font-mono text-[11px] text-sediment break-all">
+            <span className="text-sediment-strong">id · </span>
+            {endpointId}
+          </p>
+        ) : null}
+        <p className="font-mono text-[11px] text-bone-dim leading-relaxed">
+          <span className="text-sediment-strong">reason · </span>
+          {message}
+        </p>
+        <p className="font-mono text-[10px] text-sediment-strong mt-[10px]">
+          if the id starts with <code className="text-bone">ep_</code> it belongs to ai_engine (boreholes); hex ids belong to pipe.
+        </p>
       </div>
     </div>
   );
