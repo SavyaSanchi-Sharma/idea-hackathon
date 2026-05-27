@@ -1,8 +1,8 @@
-use std::sync::atomic::{AtomicU64, Ordering};
+use crate::error::BackendError;
 use pyo3::prelude::*;
 use pyo3::types::{PyModule, PyString};
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::Mutex;
-use crate::error::BackendError;
 
 const BRIDGE_SRC: &str = include_str!("slm_bridge.py");
 
@@ -80,7 +80,11 @@ impl SlmRuntime {
         Ok(result)
     }
 
-    async fn call_py(&self, name: &'static str, arg: Option<String>) -> Result<String, BackendError> {
+    async fn call_py(
+        &self,
+        name: &'static str,
+        arg: Option<String>,
+    ) -> Result<String, BackendError> {
         let bridge = Python::with_gil(|py| self.bridge.clone_ref(py));
         tokio::task::spawn_blocking(move || -> PyResult<String> {
             Python::with_gil(|py| {

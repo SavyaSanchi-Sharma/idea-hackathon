@@ -1,6 +1,6 @@
-use std::path::PathBuf;
-use serde::Deserialize;
 use crate::error::BackendError;
+use serde::Deserialize;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct BackendCfg {

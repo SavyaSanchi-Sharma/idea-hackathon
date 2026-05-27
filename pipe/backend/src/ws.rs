@@ -1,7 +1,7 @@
-use std::sync::Mutex;
-use serde::Serialize;
-use tokio::sync::broadcast;
 use crate::unified::UnifiedPrediction;
+use serde::Serialize;
+use std::sync::Mutex;
+use tokio::sync::broadcast;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", content = "payload")]

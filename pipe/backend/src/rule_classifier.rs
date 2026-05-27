@@ -39,7 +39,10 @@ pub fn classify(r: RuleInput<'_>) -> RuleResult {
     if r.deprecated_flag {
         reasons.push("deprecated flag set".into());
         if r.call_count_7d > 0 {
-            reasons.push(format!("still receiving traffic ({} calls/7d)", r.call_count_7d));
+            reasons.push(format!(
+                "still receiving traffic ({} calls/7d)",
+                r.call_count_7d
+            ));
         }
         return RuleResult {
             state: Classification::Deprecated,

@@ -287,6 +287,9 @@ function DeployProbePanel({ onDeployed }: { onDeployed: (s: Site) => void }) {
     onSuccess: (site) => {
       setError(null);
       qc.invalidateQueries({ queryKey: ["sites"] });
+      qc.invalidateQueries({ queryKey: ["graph"] });
+      qc.invalidateQueries({ queryKey: ["endpoints"] });
+      qc.invalidateQueries({ queryKey: ["summary"] });
       onDeployed(site);
     },
     onError: (e: unknown) => {
@@ -317,12 +320,18 @@ function DeployProbePanel({ onDeployed }: { onDeployed: (s: Site) => void }) {
       return;
     }
     let source_config: DockerSourceConfig | FileReplaySourceConfig;
+    let finalSourceType = sourceType;
     if (sourceType === "docker") {
       if (!container.trim()) {
-        setError("container id/name is required for a docker source");
-        return;
+        finalSourceType = "file_replay";
+        source_config = {
+          path: path.trim() || "docs/demo/synthetic-bank-logs.jsonl",
+          replay_speed: replaySpeed > 0 ? replaySpeed : 50,
+          loop: true,
+        };
+      } else {
+        source_config = { container: container.trim() };
       }
-      source_config = { container: container.trim() };
     } else {
       if (!path.trim()) {
         setError("file path is required for a file_replay source");
@@ -336,7 +345,7 @@ function DeployProbePanel({ onDeployed }: { onDeployed: (s: Site) => void }) {
     }
     mutation.mutate({
       name: trimmedName,
-      source_type: sourceType,
+      source_type: finalSourceType,
       source_config,
       service_lane: serviceLane,
       runtime,
@@ -397,7 +406,7 @@ function DeployProbePanel({ onDeployed }: { onDeployed: (s: Site) => void }) {
             />
             <RadioPill
               label="docker"
-              hint="tail container stdout via docker.sock"
+              hint="tail container stdout; blank falls back to sample"
               checked={sourceType === "docker"}
               onClick={() => setSourceType("docker")}
             />
@@ -406,11 +415,16 @@ function DeployProbePanel({ onDeployed }: { onDeployed: (s: Site) => void }) {
 
         {sourceType === "docker" ? (
           <FormRow label="container">
-            <TextInput
-              value={container}
-              onChange={setContainer}
-              placeholder="container id or name"
-            />
+            <div className="flex flex-col gap-[6px]">
+              <TextInput
+                value={container}
+                onChange={setContainer}
+                placeholder="container id or name"
+              />
+              <span className="font-mono text-[10px] text-sediment-strong lowercase">
+                leave blank to drill the looped sample live source
+              </span>
+            </div>
           </FormRow>
         ) : (
           <>

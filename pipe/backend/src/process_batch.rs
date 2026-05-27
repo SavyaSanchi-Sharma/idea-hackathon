@@ -1,13 +1,13 @@
-use std::collections::{HashMap, HashSet};
-use std::time::Instant;
-use chrono::Utc;
-use data::{Event, Tagged};
-use graph::NodeId;
-use model_loader::{AssembleInput, FeatureBatch, FeatureRow};
 use crate::owasp::{self, OwaspInput};
 use crate::rule_classifier::{self, RuleInput};
 use crate::state::AppState;
 use crate::unified::{Classification, UnifiedPrediction};
+use chrono::Utc;
+use data::{Event, Tagged};
+use graph::NodeId;
+use model_loader::{AssembleInput, FeatureBatch, FeatureRow};
+use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 
 pub async fn run(state: &AppState, events: Vec<Tagged>) {
     let started = Instant::now();
@@ -80,7 +80,9 @@ pub async fn run(state: &AppState, events: Vec<Tagged>) {
                     } else {
                         v.sort_unstable();
                         let n = v.len();
-                        let idx = (((n as f64) * 0.95).ceil() as usize).saturating_sub(1).min(n - 1);
+                        let idx = (((n as f64) * 0.95).ceil() as usize)
+                            .saturating_sub(1)
+                            .min(n - 1);
                         Some(v[idx] as f64)
                     }
                 })
@@ -102,10 +104,12 @@ pub async fn run(state: &AppState, events: Vec<Tagged>) {
                     }
                 })
                 .unwrap_or(0.0);
-            let last_seen_days = row.registry_last_modified
+            let last_seen_days = row
+                .registry_last_modified
                 .map(|t| (Utc::now() - t).num_days() as f64)
                 .unwrap_or(0.0);
-            let last_deploy_days = row.last_commit_date
+            let last_deploy_days = row
+                .last_commit_date
                 .map(|t| (Utc::now() - t).num_days() as f64)
                 .unwrap_or(0.0);
 
@@ -195,15 +199,8 @@ pub async fn run(state: &AppState, events: Vec<Tagged>) {
             owner_present: fr.owner_present != 0,
             p95_latency_ms: fr.p95_latency_ms,
         });
-        let u = UnifiedPrediction::merge(
-            nid.0,
-            &rule,
-            ml_state,
-            ml_conf,
-            risk_score,
-            findings,
-            None,
-        );
+        let u =
+            UnifiedPrediction::merge(nid.0, &rule, ml_state, ml_conf, risk_score, findings, None);
         let _ = row;
         unified.push(u);
     }
@@ -219,7 +216,10 @@ pub async fn run(state: &AppState, events: Vec<Tagged>) {
         .iter()
         .map(crate::ws::EndpointUpdate::from)
         .collect();
-    state.ws.broadcast(crate::ws::Message::EndpointUpdates(updates)).await;
+    state
+        .ws
+        .broadcast(crate::ws::Message::EndpointUpdates(updates))
+        .await;
 
     state.metrics.batch_done(n_events, unified.len());
     let _ = started.elapsed();

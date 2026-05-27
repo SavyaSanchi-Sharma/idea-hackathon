@@ -1,5 +1,3 @@
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use crate::cfg::BackendCfg;
 use crate::metrics::Metrics;
 use crate::predictions::Predictions;
@@ -8,6 +6,8 @@ use crate::reports::Reports;
 use crate::scan::ScanRegistry;
 use crate::slm_runtime::SlmRuntime;
 use crate::ws::WsBroadcaster;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[derive(Clone)]
 pub struct AppState {

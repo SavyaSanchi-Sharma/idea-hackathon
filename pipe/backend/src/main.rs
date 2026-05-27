@@ -35,8 +35,9 @@ use crate::ws::WsBroadcaster;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config_path =
-        std::env::var("ZH_CONFIG").unwrap_or_else(|_| "config.toml".to_string());
+    // let config_path =
+    //     std::env::var("ZH_CONFIG").unwrap_or_else(|_| "config.toml".to_string());
+    let config_path = "config.toml".to_string();
     log::start_kv("backend", &[("config", &config_path)]);
     let cfg = BackendCfg::load(&config_path)?;
 
@@ -95,9 +96,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .allow_methods(Any)
         .allow_headers(Any);
 
-    let app = routes::router()
-        .with_state(state)
-        .layer(cors);
+    let app = routes::router().with_state(state).layer(cors);
 
     let addr: SocketAddr = ([0, 0, 0, 0], cfg.port).into();
     log::start_kv("backend.http", &[("addr", &addr.to_string())]);

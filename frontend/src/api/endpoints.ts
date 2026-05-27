@@ -224,6 +224,7 @@ interface PipeGraphNode {
   id: string;
   kind: string;
   label: string;
+  props?: Record<string, unknown>;
 }
 interface PipeGraphEdge {
   src?: string;
@@ -239,11 +240,24 @@ interface PipeGraph {
 }
 
 function adaptGraphNode(n: PipeGraphNode): GraphNode {
+  const props = n.props ?? {};
+  const service = typeof props.service === "string" ? props.service : undefined;
+  const path = typeof props.path === "string" ? props.path : undefined;
+  const firstSeen =
+    typeof props.registry_first_seen === "string"
+      ? props.registry_first_seen
+      : typeof props.last_commit_date === "string"
+        ? props.last_commit_date
+        : undefined;
   return {
     id: n.id,
     type: (n.kind as GraphNodeType) ?? "service",
     label: n.label,
-    metadata: {},
+    metadata: {
+      ...props,
+      service_lane: inferServiceLane(service, path),
+      birth_year: safeBirthYear(firstSeen),
+    },
   };
 }
 

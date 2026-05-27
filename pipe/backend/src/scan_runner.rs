@@ -1,8 +1,8 @@
-use chrono::Utc;
 use crate::scan::{ScanEvent, ScanStats, ScanStatus};
 use crate::state::AppState;
 use crate::unified::{Classification, RiskBand};
 use crate::ws::Message;
+use chrono::Utc;
 
 pub async fn run_consultation(state: AppState, scan_id: String) {
     let mut job = match state.scans.get(&scan_id) {

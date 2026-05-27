@@ -7,5 +7,6 @@ export function useGraph(filters: { classification?: Classification; type?: stri
     queryKey: ["graph", filters],
     queryFn: () => getGraph(filters),
     staleTime: 60_000,
+    refetchInterval: 4_000,
   });
 }

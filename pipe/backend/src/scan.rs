@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use std::sync::Mutex;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use std::collections::HashMap;
+use std::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
@@ -90,6 +90,11 @@ impl ScanRegistry {
     }
 
     pub fn events_for(&self, id: &str) -> Vec<ScanEvent> {
-        self.events.lock().unwrap().get(id).cloned().unwrap_or_default()
+        self.events
+            .lock()
+            .unwrap()
+            .get(id)
+            .cloned()
+            .unwrap_or_default()
     }
 }

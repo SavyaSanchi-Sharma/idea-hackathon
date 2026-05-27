@@ -1,8 +1,8 @@
+use crate::error::BackendError;
+use rusqlite::{Connection, OptionalExtension, Row, params};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Mutex;
-use rusqlite::{params, Connection, OptionalExtension, Row};
-use serde::{Deserialize, Serialize};
-use crate::error::BackendError;
 
 const INIT_SQL: &str = r#"
 CREATE TABLE IF NOT EXISTS reports (
@@ -62,11 +62,16 @@ impl Reports {
         let conn = Connection::open(path).map_err(BackendError::from)?;
         conn.execute_batch(INIT_SQL)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
-        Ok(Self { conn: Mutex::new(conn) })
+        Ok(Self {
+            conn: Mutex::new(conn),
+        })
     }
 
     pub fn upsert(&self, r: &ReportRow) -> Result<(), BackendError> {
-        let conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         conn.execute(
             UPSERT_SQL,
             params![
@@ -85,7 +90,10 @@ impl Reports {
     }
 
     pub fn list_for_endpoint(&self, id: &[u8; 16]) -> Result<Vec<ReportRow>, BackendError> {
-        let conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         let mut stmt = conn.prepare_cached(SELECT_BY_ENDPOINT)?;
         let rows = stmt.query_map(params![id.as_slice()], row_from_db)?;
         let mut out = Vec::new();
@@ -101,7 +109,10 @@ impl Reports {
         kind: &str,
         framework: &str,
     ) -> Result<Option<ReportRow>, BackendError> {
-        let conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         let mut stmt = conn.prepare_cached(SELECT_ONE)?;
         let row = stmt
             .query_row(params![id.as_slice(), kind, framework], row_from_db)

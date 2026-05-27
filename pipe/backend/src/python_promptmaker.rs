@@ -1,9 +1,9 @@
+use crate::error::BackendError;
 use pyo3::prelude::*;
 use pyo3::types::{PyModule, PyString};
 use serde::Serialize;
 use serde_json::Value;
 use tokio::sync::Mutex;
-use crate::error::BackendError;
 
 const PROMPTMAKER_SRC: &str = include_str!("promptmaker.py");
 
@@ -23,7 +23,8 @@ impl PythonPromptmaker {
         crate::log::start_who("python_promptmaker");
         pyo3::prepare_freethreaded_python();
         let module = Python::with_gil(|py| -> PyResult<Py<PyModule>> {
-            let m = PyModule::from_code_bound(py, PROMPTMAKER_SRC, "promptmaker.py", "promptmaker")?;
+            let m =
+                PyModule::from_code_bound(py, PROMPTMAKER_SRC, "promptmaker.py", "promptmaker")?;
             Ok(m.unbind())
         })
         .map_err(|e| BackendError::Promptmaker(format!("load: {}", e)))?;
@@ -33,19 +34,32 @@ impl PythonPromptmaker {
         })
     }
 
-    pub async fn build_threat_narrative<P: Serialize>(&self, payload: &P) -> Result<PromptOut, BackendError> {
+    pub async fn build_threat_narrative<P: Serialize>(
+        &self,
+        payload: &P,
+    ) -> Result<PromptOut, BackendError> {
         self.call("build_threat_narrative_json", payload).await
     }
 
-    pub async fn build_remediation_playbook<P: Serialize>(&self, payload: &P) -> Result<PromptOut, BackendError> {
+    pub async fn build_remediation_playbook<P: Serialize>(
+        &self,
+        payload: &P,
+    ) -> Result<PromptOut, BackendError> {
         self.call("build_remediation_playbook_json", payload).await
     }
 
-    pub async fn build_compliance_summary<P: Serialize>(&self, payload: &P) -> Result<PromptOut, BackendError> {
+    pub async fn build_compliance_summary<P: Serialize>(
+        &self,
+        payload: &P,
+    ) -> Result<PromptOut, BackendError> {
         self.call("build_compliance_summary_json", payload).await
     }
 
-    async fn call<P: Serialize>(&self, fn_name: &'static str, payload: &P) -> Result<PromptOut, BackendError> {
+    async fn call<P: Serialize>(
+        &self,
+        fn_name: &'static str,
+        payload: &P,
+    ) -> Result<PromptOut, BackendError> {
         let payload_json = serde_json::to_string(payload)?;
         let _guard = self.lock.lock().await;
         let module = Python::with_gil(|py| self.module.clone_ref(py));
@@ -53,7 +67,9 @@ impl PythonPromptmaker {
             Python::with_gil(|py| {
                 let m = module.bind(py);
                 let f = m.getattr(fn_name)?;
-                let r: String = f.call1((PyString::new_bound(py, &payload_json),))?.extract()?;
+                let r: String = f
+                    .call1((PyString::new_bound(py, &payload_json),))?
+                    .extract()?;
                 Ok(r)
             })
         })

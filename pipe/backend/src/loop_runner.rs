@@ -1,6 +1,6 @@
-use std::time::Duration;
-use data::{Rx, Tagged};
 use crate::state::AppState;
+use data::{Rx, Tagged};
+use std::time::Duration;
 
 pub async fn run(mut rx: Rx, state: AppState) {
     let cap = state.cfg.loop_cfg.batch_size_hint;

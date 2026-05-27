@@ -28,7 +28,7 @@ pub struct EndpointStats {
 pub struct GraphStore {
     g: DiGraph<NodeId, EdgeType>,
     idx: HashMap<NodeId, NodeIndex>,
-    pub(crate) nodes: HashMap<NodeId, Node>,
+    pub(crate) nodes: HashMap<NodeId, Node>, // pub(crate) means it is public only inside the crate 
     pub(crate) edges: HashMap<(NodeId, NodeId, EdgeType), Edge>,
     pub(crate) stats: HashMap<NodeId, EndpointStats>,
     pool: SqlitePool,
@@ -337,6 +337,14 @@ impl GraphStore {
 
     pub fn endpoint_stats(&self, id: &NodeId) -> Option<EndpointStats> {
         self.stats.get(id).cloned()
+    }
+
+    pub fn nodes(&self) -> impl Iterator<Item = (&NodeId, &Node)> {
+        self.nodes.iter()
+    }
+
+    pub fn edges(&self) -> impl Iterator<Item = (&(NodeId, NodeId, EdgeType), &Edge)> {
+        self.edges.iter()
     }
 
     pub fn iter_endpoint_stats(&self) -> impl Iterator<Item = (&NodeId, &EndpointStats)> {

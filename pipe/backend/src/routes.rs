@@ -1,18 +1,18 @@
-use std::time::Duration;
-use axum::extract::{ws::WebSocketUpgrade, Path, Query, State};
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
-use axum::{Json, Router};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use chrono::Utc;
-use graph::NodeId;
 use crate::error::BackendError;
 use crate::reports::ReportRow;
 use crate::state::AppState;
 use crate::unified::{Classification, RiskBand};
 use crate::ws::Message;
+use axum::extract::{Path, Query, State, ws::WebSocketUpgrade};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::routing::{get, post};
+use axum::{Json, Router};
+use chrono::Utc;
+use graph::NodeId;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::time::Duration;
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -26,6 +26,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/endpoints/:id/compliance", post(compliance))
         .route("/api/graph", get(graph_full))
         .route("/api/graph/blast-radius/:id", get(blast_radius))
+        .route("/api/live/traffic", post(live_traffic))
         .route("/api/scan/start", post(scan_start))
         .route("/api/scan/:id", get(scan_get))
         .route("/api/scan/:id/events", get(scan_events))
@@ -60,35 +61,53 @@ async fn dev_seed_many(
 
     // Pools — kept small and named so generated paths look like a real bank.
     let services = [
-        "payments", "customer-service", "auth", "kyc", "cards",
-        "deposits", "loans", "fx", "treasury", "aml",
+        "payments",
+        "customer-service",
+        "auth",
+        "kyc",
+        "cards",
+        "deposits",
+        "loans",
+        "fx",
+        "treasury",
+        "aml",
     ];
     let path_templates: [(&str, &str); 14] = [
         ("POST", "/v2/upi/collect"),
         ("POST", "/v1/upi/vpa"),
-        ("GET",  "/v1/accounts/{id}/balance"),
-        ("GET",  "/v1/accounts/{id}/statements"),
+        ("GET", "/v1/accounts/{id}/balance"),
+        ("GET", "/v1/accounts/{id}/statements"),
         ("POST", "/v1/orders"),
-        ("PUT",  "/v1/orders/{id}"),
+        ("PUT", "/v1/orders/{id}"),
         ("POST", "/v1/cards/issue"),
-        ("GET",  "/v1/cards/list"),
+        ("GET", "/v1/cards/list"),
         ("POST", "/v1/kyc/aadhaar/{id}"),
         ("POST", "/v1/transfers"),
-        ("GET",  "/v1/fx/quote"),
+        ("GET", "/v1/fx/quote"),
         ("POST", "/internal/legacy/customer-search"),
         ("POST", "/legacy/balance"),
         ("DELETE", "/v1/users/{id}"),
     ];
     let auth_schemes = ["oauth2", "apikey", "basic", "none", "mtls"];
     let runtimes: [(&str, &str); 8] = [
-        ("python", "3.11"), ("python", "3.7"),
-        ("springboot", "2.7"), ("springboot", "1.5"),
-        ("nodejs", "18"), ("nodejs", "10"),
-        ("golang", "1.21"), ("dotnet", "6"),
+        ("python", "3.11"),
+        ("python", "3.7"),
+        ("springboot", "2.7"),
+        ("springboot", "1.5"),
+        ("nodejs", "18"),
+        ("nodejs", "10"),
+        ("golang", "1.21"),
+        ("dotnet", "6"),
     ];
     let owners = [
-        Some("Payments"), Some("Customer"), Some("KYC"), Some("Cards"),
-        Some("Treasury"), Some("AML"), None, None,  // ~25% no owner
+        Some("Payments"),
+        Some("Customer"),
+        Some("KYC"),
+        Some("Cards"),
+        Some("Treasury"),
+        Some("AML"),
+        None,
+        None, // ~25% no owner
     ];
 
     let mut events: Vec<Tagged> = Vec::with_capacity(n * 3);
@@ -121,7 +140,7 @@ async fn dev_seed_many(
         // Status: 200 mostly, sprinkle in 401/403 for none-auth, 500 occasionally.
         let status_code = match (auth, mix(11) % 20) {
             ("none", r) if r < 6 => 401,
-            (_,      r) if r == 0 => 500,
+            (_, r) if r == 0 => 500,
             _ => 200,
         };
         let latency_ms = 40 + (mix(12) as u32 % 500);
@@ -134,7 +153,11 @@ async fn dev_seed_many(
                     change_type: "added".into(),
                     endpoint_path: path.clone(),
                     method: method.into(),
-                    version: Some(if path.starts_with("/v2") { "v2".into() } else { "v1".into() }),
+                    version: Some(if path.starts_with("/v2") {
+                        "v2".into()
+                    } else {
+                        "v1".into()
+                    }),
                     service: svc.into(),
                     owner_team: owner.map(|o| o.into()),
                     auth_required: auth.into(),
@@ -354,10 +377,22 @@ async fn health(State(s): State<AppState>) -> Json<serde_json::Value> {
 async fn stats_summary(State(s): State<AppState>) -> Result<Json<serde_json::Value>, BackendError> {
     let preds = s.predictions.list_all()?;
     let total = preds.len();
-    let active = preds.iter().filter(|p| p.rule_state == Classification::Active).count();
-    let deprecated = preds.iter().filter(|p| p.rule_state == Classification::Deprecated).count();
-    let orphaned = preds.iter().filter(|p| p.rule_state == Classification::Orphaned).count();
-    let critical = preds.iter().filter(|p| p.risk_band == RiskBand::Critical).count();
+    let active = preds
+        .iter()
+        .filter(|p| p.rule_state == Classification::Active)
+        .count();
+    let deprecated = preds
+        .iter()
+        .filter(|p| p.rule_state == Classification::Deprecated)
+        .count();
+    let orphaned = preds
+        .iter()
+        .filter(|p| p.rule_state == Classification::Orphaned)
+        .count();
+    let critical = preds
+        .iter()
+        .filter(|p| p.risk_band == RiskBand::Critical)
+        .count();
     let needs_review = preds.iter().filter(|p| p.needs_review).count();
     let in_registry = {
         let ids = s.endpoint_store.list_ids()?;
@@ -466,7 +501,10 @@ async fn get_endpoint(
     Path(id): Path<String>,
 ) -> Result<Json<serde_json::Value>, BackendError> {
     let nid = parse_id(&id)?;
-    let row = s.endpoint_store.get(&nid.0)?.ok_or(BackendError::NotFound)?;
+    let row = s
+        .endpoint_store
+        .get(&nid.0)?
+        .ok_or(BackendError::NotFound)?;
     let pred = s.predictions.get(&nid.0)?;
     let reports = s.reports.list_for_endpoint(&nid.0)?;
     let graph_features = {
@@ -504,18 +542,123 @@ async fn graph_full(State(s): State<AppState>) -> Result<Json<serde_json::Value>
     let g = s.graph.read().await;
     let mut nodes: Vec<serde_json::Value> = Vec::new();
     let mut edges: Vec<serde_json::Value> = Vec::new();
-    for id in s.endpoint_store.list_ids()? {
-        let nid = NodeId(id);
-        if let Some(n) = g.get_node(&nid) {
-            nodes.push(json!({
-                "id": hex::encode(n.id.0),
-                "kind": n.kind,
-                "label": n.label,
-            }));
-        }
+    for (_, n) in g.nodes() {
+        nodes.push(json!({
+            "id": hex::encode(n.id.0),
+            "kind": n.kind,
+            "label": n.label,
+            "props": n.props,
+        }));
     }
-    let _ = &mut edges;
+    for (_, e) in g.edges() {
+        edges.push(json!({
+            "src": hex::encode(e.src.0),
+            "dst": hex::encode(e.dst.0),
+            "kind": e.kind,
+            "props": e.props,
+        }));
+    }
     Ok(Json(json!({"nodes": nodes, "edges": edges})))
+}
+
+#[derive(Debug, Deserialize)]
+struct LiveTrafficBody {
+    site_id: String,
+    site_name: String,
+    service: String,
+    runtime: String,
+    runtime_version: String,
+    method: String,
+    path: String,
+    status_code: Option<u16>,
+    latency_ms: Option<u32>,
+    auth_present: Option<bool>,
+    client_id: Option<String>,
+}
+
+async fn live_traffic(
+    State(s): State<AppState>,
+    Json(body): Json<LiveTrafficBody>,
+) -> Result<Json<serde_json::Value>, BackendError> {
+    use data::{Code, Event, Registry, Src, Tagged, Traffic};
+    use uuid::Uuid;
+
+    let method = body.method.trim().to_uppercase();
+    let path = body.path.trim().to_string();
+    let service = body.service.trim().to_string();
+    if method.is_empty() || path.is_empty() || service.is_empty() {
+        return Err(BackendError::BadRequest(
+            "method, path, and service are required".into(),
+        ));
+    }
+
+    let now = Utc::now();
+    let auth_scheme = if body.auth_present.unwrap_or(false) {
+        "http:bearer"
+    } else {
+        "none"
+    };
+    let endpoint_key = format!(
+        "{}:{}:{}:{}",
+        body.site_id,
+        service,
+        method,
+        path.replace('/', "_")
+    );
+
+    let events = vec![
+        Tagged {
+            event_source: Src::RealRegistry,
+            event: Event::Registry(Registry {
+                timestamp: now,
+                change_type: "added".into(),
+                endpoint_path: path.clone(),
+                method: method.clone(),
+                version: None,
+                service: service.clone(),
+                owner_team: Some(format!("live:{}", body.site_name)),
+                auth_required: auth_scheme.into(),
+                deprecated_flag: path.contains("legacy") || path.contains("internal"),
+                sunset_date: None,
+                last_modified: now,
+            }),
+        },
+        Tagged {
+            event_source: Src::RealCode,
+            event: Event::Code(Code {
+                timestamp: now,
+                repo_name: format!("{}-live", body.site_id),
+                commit_sha: endpoint_key,
+                endpoint_path: path.clone(),
+                method: method.clone(),
+                service: service.clone(),
+                file_path: format!("live/{}/{}", service, path.trim_start_matches('/')),
+                last_commit_date: now,
+                last_author: "live-ingest".into(),
+                runtime: body.runtime,
+                runtime_version: body.runtime_version,
+            }),
+        },
+        Tagged {
+            event_source: Src::RealTraffic,
+            event: Event::Traffic(Traffic {
+                timestamp: now,
+                request_id: Uuid::new_v4(),
+                method,
+                path,
+                status_code: body.status_code.unwrap_or(200),
+                latency_ms: body.latency_ms.unwrap_or(0),
+                client_id: body.client_id.unwrap_or_else(|| "live-client".into()),
+                auth_scheme: auth_scheme.into(),
+                upstream_service: service,
+                bytes_in: 0,
+                bytes_out: 0,
+            }),
+        },
+    ];
+
+    crate::process_batch::run(&s, events).await;
+    Ok(Json(json!({"ok": true})))
 }
 
 async fn blast_radius(
@@ -530,9 +673,7 @@ async fn blast_radius(
 
 // ─── scan ──────────────────────────────────────────────────────────────────
 
-async fn scan_start(
-    State(s): State<AppState>,
-) -> Result<Json<serde_json::Value>, BackendError> {
+async fn scan_start(State(s): State<AppState>) -> Result<Json<serde_json::Value>, BackendError> {
     let job = s.scans.new_job();
     let id = job.id.clone();
     let st = s.clone();
@@ -607,7 +748,10 @@ async fn compliance(
 ) -> Result<Json<NarrativeResponse>, BackendError> {
     let fw = q.framework.unwrap_or_else(|| "rbi_2024".into());
     if fw != "rbi_2024" && fw != "pci_dss" {
-        return Err(BackendError::BadRequest(format!("unknown framework: {}", fw)));
+        return Err(BackendError::BadRequest(format!(
+            "unknown framework: {}",
+            fw
+        )));
     }
     generate_report(s, &id, "compliance_summary", Some(fw), 400).await
 }
@@ -620,7 +764,10 @@ async fn generate_report(
     max_new_tokens: u32,
 ) -> Result<Json<NarrativeResponse>, BackendError> {
     let nid = parse_id(id_hex)?;
-    let row = s.endpoint_store.get(&nid.0)?.ok_or(BackendError::NotFound)?;
+    let row = s
+        .endpoint_store
+        .get(&nid.0)?
+        .ok_or(BackendError::NotFound)?;
     let pred = s.predictions.get(&nid.0)?.ok_or(BackendError::NotFound)?;
     let graph_features = {
         let g = s.graph.read().await;
@@ -639,13 +786,19 @@ async fn generate_report(
                 .filter(|(k, _)| **k == 401 || **k == 403)
                 .map(|(_, v)| *v)
                 .sum();
-            let rate = if total == 0 { 0.0 } else { fails as f64 / total as f64 };
+            let rate = if total == 0 {
+                0.0
+            } else {
+                fails as f64 / total as f64
+            };
             let mut v: Vec<u32> = st.latency_samples.iter().copied().collect();
             v.sort_unstable();
             let p = if v.is_empty() {
                 0.0
             } else {
-                let idx = (((v.len() as f64) * 0.95).ceil() as usize).saturating_sub(1).min(v.len() - 1);
+                let idx = (((v.len() as f64) * 0.95).ceil() as usize)
+                    .saturating_sub(1)
+                    .min(v.len() - 1);
                 v[idx] as f64
             };
             (st.calls_observed as i64, p, rate)
@@ -708,9 +861,21 @@ async fn generate_report(
     });
 
     let prompt_out = match kind {
-        "threat_narrative" => s.python_promptmaker.build_threat_narrative(&payload).await?,
-        "remediation_playbook" => s.python_promptmaker.build_remediation_playbook(&payload).await?,
-        "compliance_summary" => s.python_promptmaker.build_compliance_summary(&payload).await?,
+        "threat_narrative" => {
+            s.python_promptmaker
+                .build_threat_narrative(&payload)
+                .await?
+        }
+        "remediation_playbook" => {
+            s.python_promptmaker
+                .build_remediation_playbook(&payload)
+                .await?
+        }
+        "compliance_summary" => {
+            s.python_promptmaker
+                .build_compliance_summary(&payload)
+                .await?
+        }
         _ => return Err(BackendError::BadRequest(format!("unknown kind: {}", kind))),
     };
 
@@ -719,8 +884,11 @@ async fn generate_report(
     let timeout = Duration::from_millis(s.cfg.slm.timeout_ms);
     let result = tokio::time::timeout(
         timeout,
-        s.slm_runtime
-            .generate(&prompt_out.system_prompt, &user_context_json, max_new_tokens),
+        s.slm_runtime.generate(
+            &prompt_out.system_prompt,
+            &user_context_json,
+            max_new_tokens,
+        ),
     )
     .await
     .map_err(|_| BackendError::SlmTimeout)??;
@@ -760,10 +928,7 @@ async fn generate_report(
 
 // ─── WebSocket ─────────────────────────────────────────────────────────────
 
-async fn ws_upgrade(
-    ws: WebSocketUpgrade,
-    State(s): State<AppState>,
-) -> Response {
+async fn ws_upgrade(ws: WebSocketUpgrade, State(s): State<AppState>) -> Response {
     ws.on_upgrade(move |socket| handle_ws(socket, s))
 }
 

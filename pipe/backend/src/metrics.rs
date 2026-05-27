@@ -1,6 +1,6 @@
+use serde::Serialize;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
-use serde::Serialize;
 
 #[derive(Default, Debug)]
 pub struct Metrics {
@@ -20,12 +20,16 @@ impl Metrics {
     }
     pub fn batch_done(&self, n_events: usize, n_endpoints: usize) {
         self.batches_total.fetch_add(1, Ordering::Relaxed);
-        self.events_processed.fetch_add(n_events as u64, Ordering::Relaxed);
-        self.endpoints_processed.fetch_add(n_endpoints as u64, Ordering::Relaxed);
-        self.last_batch_ts.store(chrono::Utc::now().timestamp(), Ordering::Relaxed);
+        self.events_processed
+            .fetch_add(n_events as u64, Ordering::Relaxed);
+        self.endpoints_processed
+            .fetch_add(n_endpoints as u64, Ordering::Relaxed);
+        self.last_batch_ts
+            .store(chrono::Utc::now().timestamp(), Ordering::Relaxed);
     }
     pub fn predictions(&self, n: usize) {
-        self.predictions_written.fetch_add(n as u64, Ordering::Relaxed);
+        self.predictions_written
+            .fetch_add(n as u64, Ordering::Relaxed);
     }
     pub fn report(&self) {
         self.reports_written.fetch_add(1, Ordering::Relaxed);

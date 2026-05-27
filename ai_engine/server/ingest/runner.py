@@ -15,6 +15,8 @@ import time
 from dataclasses import asdict
 from typing import Callable
 
+import httpx
+
 from .aggregator import Aggregator
 from .buffer import BufferRegistry, RingBuffer
 from .parsers import LogEvent, detect_format, get_parser
@@ -30,6 +32,7 @@ import os
 # doesn't cause inference storms. Env-overridable for tests/demos.
 TICK_SECONDS = float(os.environ.get("ZH_INGEST_TICK_SECONDS", "3.0"))
 FLUSH_BATCH_SECONDS = 0.1
+PIPE_BASE_URL = os.environ.get("ZH_PIPE_BASE_URL", "http://localhost:8000").rstrip("/")
 
 
 def _event_to_wire(ev: LogEvent, seq: int) -> dict:
@@ -64,6 +67,7 @@ class IngestRunner:
         self._sources: dict[str, LogSource] = {}
         self._aggregators: dict[str, Aggregator] = {}
         self._format_detected: dict[str, bool] = {}
+        self._pipe_client = httpx.AsyncClient(timeout=1.5)
 
     def aggregator(self, site_id: str) -> Aggregator | None:
         return self._aggregators.get(site_id)
@@ -116,6 +120,7 @@ class IngestRunner:
     async def shutdown(self) -> None:
         for site_id in list(self._tasks.keys()):
             await self.stop_site(site_id)
+        await self._pipe_client.aclose()
 
     # ─── internals ──────────────────────────────────────────────────────────
 
@@ -165,6 +170,7 @@ class IngestRunner:
                                        else LogEvent(site_id=site_id, ts=ingest_ts, raw=buffered))
                                 seq = buf.append(ev0)
                                 agg.ingest(ev0)
+                                self._mirror_to_pipe(state, ev0)
                                 coalesced.append(_event_to_wire(ev0, seq))
                             format_buffer = []
                         else:
@@ -176,6 +182,7 @@ class IngestRunner:
                         ev = active_parser.parse(raw, site_id, ingest_ts)
                         seq = buf.append(ev)
                         agg.ingest(ev)
+                        self._mirror_to_pipe(state, ev)
                         coalesced.append(_event_to_wire(ev, seq))
 
                     if time.monotonic() - last_flush >= FLUSH_BATCH_SECONDS:
@@ -252,3 +259,31 @@ class IngestRunner:
             "runtime": state.runtime,
             "runtime_version": state.runtime_version,
         }
+
+    def _mirror_to_pipe(self, state: SiteState, ev: LogEvent) -> None:
+        """Best-effort bridge: live probe lines also materialize in pipe's graph."""
+        if not ev.parsed or not ev.method or not ev.path:
+            return
+
+        payload = {
+            "site_id": state.site_id,
+            "site_name": state.name,
+            "service": state.service,
+            "runtime": state.runtime,
+            "runtime_version": state.runtime_version,
+            "method": ev.method,
+            "path": ev.path,
+            "status_code": ev.status,
+            "latency_ms": ev.latency_ms,
+            "auth_present": ev.auth_present,
+            "client_id": state.name,
+        }
+        asyncio.create_task(self._post_pipe_traffic(payload))
+
+    async def _post_pipe_traffic(self, payload: dict) -> None:
+        try:
+            await self._pipe_client.post(f"{PIPE_BASE_URL}/api/live/traffic", json=payload)
+        except Exception:
+            # The live probe must keep running even if the Rust graph backend is
+            # down or restarting. The borehole detail page still uses ai_engine.
+            return

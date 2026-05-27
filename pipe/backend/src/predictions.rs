@@ -1,10 +1,10 @@
-use std::path::Path;
-use std::sync::Mutex;
-use chrono::{DateTime, Utc};
-use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row};
-use serde::Serialize;
 use crate::error::BackendError;
 use crate::unified::{Classification, RiskBand, UnifiedPrediction};
+use chrono::{DateTime, Utc};
+use rusqlite::{Connection, OptionalExtension, Row, params, params_from_iter};
+use serde::Serialize;
+use std::path::Path;
+use std::sync::Mutex;
 
 const INIT_SQL: &str = r#"
 CREATE TABLE IF NOT EXISTS predictions (
@@ -90,14 +90,19 @@ impl Predictions {
         conn.execute_batch(INIT_SQL)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "synchronous", "NORMAL")?;
-        Ok(Self { conn: Mutex::new(conn) })
+        Ok(Self {
+            conn: Mutex::new(conn),
+        })
     }
 
     pub fn upsert_batch(&self, items: &[UnifiedPrediction]) -> Result<usize, BackendError> {
         if items.is_empty() {
             return Ok(0);
         }
-        let mut conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let mut conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         let tx = conn.transaction()?;
         for u in items {
             tx.execute(
@@ -127,7 +132,10 @@ impl Predictions {
     }
 
     pub fn get(&self, id: &[u8; 16]) -> Result<Option<PredictionRow>, BackendError> {
-        let conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         let mut stmt = conn.prepare_cached(SELECT_ONE)?;
         let row = stmt
             .query_row(params![id.as_slice()], row_from_db)
@@ -139,10 +147,16 @@ impl Predictions {
         if ids.is_empty() {
             return Ok(vec![]);
         }
-        let conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         let mut out = Vec::new();
         for chunk in ids.chunks(500) {
-            let placeholders = std::iter::repeat("?").take(chunk.len()).collect::<Vec<_>>().join(",");
+            let placeholders = std::iter::repeat("?")
+                .take(chunk.len())
+                .collect::<Vec<_>>()
+                .join(",");
             let sql = format!(
                 "SELECT {} FROM predictions WHERE endpoint_id IN ({})",
                 SELECT_COLS, placeholders
@@ -158,7 +172,10 @@ impl Predictions {
     }
 
     pub fn list_all(&self) -> Result<Vec<PredictionRow>, BackendError> {
-        let conn = self.conn.lock().map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| BackendError::Sql("mutex poisoned".into()))?;
         let sql = format!("SELECT {} FROM predictions", SELECT_COLS);
         let mut stmt = conn.prepare(&sql)?;
         let rows = stmt.query_map([], row_from_db)?;
@@ -208,7 +225,6 @@ fn row_from_db(r: &Row) -> rusqlite::Result<PredictionRow> {
         anomaly_score: r.get::<_, Option<f64>>(12)?.map(|v| v as f32),
         owasp_findings: findings,
         finding_count: r.get::<_, i32>(14)? as u32,
-        updated_at: DateTime::from_timestamp_millis(r.get::<_, i64>(15)?)
-            .unwrap_or_else(Utc::now),
+        updated_at: DateTime::from_timestamp_millis(r.get::<_, i64>(15)?).unwrap_or_else(Utc::now),
     })
 }

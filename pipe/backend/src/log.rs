@@ -27,5 +27,8 @@ pub fn err(who: &str, msg: &str) {
 pub fn hb<S: Serialize>(who: &str, payload: &S) {
     let t = chrono::Utc::now().to_rfc3339();
     let body = serde_json::to_string(payload).unwrap_or_else(|_| "{}".into());
-    println!(r#"{{"t":"{}","kind":"hb","who":"{}","data":{}}}"#, t, who, body);
+    println!(
+        r#"{{"t":"{}","kind":"hb","who":"{}","data":{}}}"#,
+        t, who, body
+    );
 }
