@@ -15,8 +15,11 @@ venv/
 env/
 .ipynb_checkpoints/
 
-# Trained model artifacts (local-only, not checked in)
-ai_engine/train/models/
+# Trained model artifacts — joblib files MUST ship for Docker/Render
+# Only exclude Python cache and the large split-snapshot (not needed at inference)
+ai_engine/train/models/**/__pycache__/
+ai_engine/train/models/**/*.pyc
+ai_engine/train/models/classifier/artifacts/splits.joblib
 
 # Rust build artifacts
 target/
